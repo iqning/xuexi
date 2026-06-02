@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+<!--
+    文章详情页模板
+    展示单篇文章的完整内容 + 评论区 + 评论表单
+    路由：/post/<id>
+-->
+
+<!-- 浏览器标签页标题：使用文章标题 -->
+{% block title %}{{ post.title }} - 我的博客{% endblock %}
+
+{% block content %}
+    <!-- ========== 文章正文区 ========== -->
+    <article class="post-detail">
+        <!-- 文章大标题 -->
+        <h1 class="post-title">{{ post.title }}</h1>
+
+        <!-- 文章元信息栏 -->
+        <div class="post-meta">
+            <!-- 作者：优先显示昵称，没有昵称则回退到用户名 -->
+            <span>作者：{{ post.author.nickname or post.author.username }}</span>
+            <!-- strftime 把 Python datetime 对象转成"年-月-日 时:分"格式 -->
+            <span>发布于：{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            <!--
+                只有当 updated_at 存在且与 created_at 不同时才显示"更新于"。
+                避免刚发布的文章也显示"更新于"
+            -->
+            {% if post.updated_at and post.updated_at != post.created_at %}
+            <span>更新于：{{ post.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            {% endif %}
+            <!-- 分类可能为空（category_id 字段可空），需要先判断 -->
+            {% if post.category %}
+            <span>
+                分类：
+                <a href="{{ url_for('category', id=post.category.id) }}">{{ post.category.name }}</a>
+            </span>
+            {% endif %}
+        </div>
+
+        <!--
+            文章正文渲染
+            | safe 过滤器：告诉 Jinja2 不要转义 HTML 标签。
+            文章内容本身是 HTML（如 <p>、<h2>），需要原样渲染。
+            注意：只有自己写的内容才能用 safe，用户提交的内容需要防 XSS 攻击
+        -->
+        <div class="post-content">
+            {{ post.content | safe }}
+        </div>
+    </article>
+
+    <!-- ========== 评论区 ========== -->
+    <section class="comments-area">
+        <!-- 评论计数：| length 是 Jinja2 内置过滤器，等价于 Python 的 len() -->
+        <h2>评论（{{ comments | length }}）</h2>
+
+        {% if comments %}
+            <!--
+                评论列表 + 递归渲染
+                先筛选顶级评论（parent_id 为空），其余为子回复，
+                交给 render_comment 宏递归渲染。
+                render_comment 会在 app.py 中定义并注册到 Jinja2 环境
+            -->
+            <div class="comment-list">
+                {% for comment in comments if not comment.parent_id %}
+                    <!--
+                        render_comment 是自定义宏，会递归渲染当前评论及其所有子回复。
+                        嵌套回复通过循环 comment.replies 实现，直到没有回复为止。
+                        用 | safe 因为宏输出的是 HTML 字符串
+                    -->
+                    {{ render_comment(comment) | safe }}
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- 还没有评论时的空状态提示 -->
+            <p class="no-comments">暂无评论，来发表第一条吧！</p>
+        {% endif %}
+
+        <!-- ========== 评论表单 ========== -->
+        <div class="comment-form">
+            <h3>发表评论</h3>
+            <!--
+                method="POST"：评论数据通过请求体发送，不会暴露在 URL 上。
+                action 用 url_for 动态生成，指向处理评论提交的路由函数
+            -->
+            <form method="POST" action="{{ url_for('comment', id=post.id) }}">
+                <!-- 昵称输入：required 表示必填，浏览器会阻止空值提交 -->
+                <div class="form-group">
+                    <label for="author_name">昵称 *</label>
+                    <input type="text" id="author_name" name="author_name" required
+                           placeholder="你的昵称">
+                </div>
+
+                <!-- 邮箱输入：type="email" 浏览器自动校验 @ 符号等格式 -->
+                <div class="form-group">
+                    <label for="author_email">邮箱（选填，不会公开）</label>
+                    <input type="email" id="author_email" name="author_email"
+                           placeholder="example@mail.com">
+                </div>
+
+                <!-- 评论正文：rows="4" 设置输入框默认高度为 4 行 -->
+                <div class="form-group">
+                    <label for="content">评论内容 *</label>
+                    <textarea id="content" name="content" rows="4" required
+                              placeholder="写点什么……"></textarea>
+                </div>
+
+                <!-- 提交按钮：type="submit" 触发表单提交 -->
+                <button type="submit" class="btn btn-primary">提交评论</button>
+            </form>
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 响应式视口配置：让页面宽度跟随设备宽度，手机端不会缩成一小团 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题：子模板可以重写这个 block 来自定义标题 -->
+    <title>{% block title %}我的博客{% endblock %}</title>
+    <!-- 引入全局样式表：url_for 会生成正确的静态文件路径 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- 子模板可在 head 中插入额外内容（如页面专属 CSS） -->
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- ========== 顶部导航栏 ========== -->
+    <header class="site-header">
+        <div class="container">
+            <!-- 网站 LOGO，点击回到首页 -->
+            <a href="{{ url_for('index') }}" class="site-logo">我的博客</a>
+            <nav class="site-nav">
+                <a href="{{ url_for('index') }}">首页</a>
+                <!-- current_user 由 Flask-Login 自动注入到所有模板中 -->
+                {% if current_user.is_authenticated %}
+                    <!-- 用户已登录：显示个人中心和后台入口 -->
+                    <a href="{{ url_for('profile') }}">个人中心</a>
+                    <a href="{{ url_for('admin') }}">后台管理</a>
+                    <!-- 显示当前登录用户名 -->
+                    <span class="nav-user">👤 {{ current_user.username }}</span>
+                    <a href="{{ url_for('logout') }}">退出</a>
+                {% else %}
+                    <!-- 用户未登录：显示登录和注册入口 -->
+                    <a href="{{ url_for('login') }}">登录</a>
+                    <a href="{{ url_for('register') }}">注册</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- ========== Flash 闪现消息 ========== -->
+    <!--
+        get_flashed_messages(with_categories=True) 返回 [(类别, 消息), ...]
+        类别（success/error/info/warning）用作 CSS class，实现不同颜色
+        消息只显示一次，页面刷新后消失
+    -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- ========== 主体内容区域 ========== -->
+    <main class="site-main">
+        <div class="container main-layout">
+            <!-- 左侧侧边栏 -->
+            <aside class="sidebar">
+                {% block sidebar %}
+                <!-- ====== 个人信息卡片 ====== -->
+                {% if current_user.is_authenticated %}
+                <div class="profile-card">
+                    <!-- 头像 -->
+                    <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}"
+                         alt="头像" class="avatar">
+                    <!-- 昵称（昵称优先，没有就显示用户名） -->
+                    <div class="nickname">{{ current_user.nickname or current_user.username }}</div>
+                    <!-- 个人简介 -->
+                    <div class="bio">{{ current_user.bio or '这个人很懒，什么都没写...' }}</div>
+                </div>
+                {% endif %}
+
+                <!-- ====== 分类列表 ====== -->
+                <div class="widget">
+                    <h3>文章分类</h3>
+                    <ul class="category-list">
+                        <!-- "全部" 链接：不带分类 ID，显示所有文章 -->
+                        <li><a href="{{ url_for('index') }}">全部</a></li>
+                        <!-- 遍历后端传入的 categories 列表，生成分类链接 -->
+                        {% for cat in categories %}
+                        <li><a href="{{ url_for('category', id=cat.id) }}">{{ cat.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endblock %}
+            </aside>
+
+            <!-- 右侧内容区：子模板通过重写 content block 来填充 -->
+            <div class="content-area">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </main>
+
+    <!-- ========== 页脚 ========== -->
+    <footer class="site-footer">
+        <div class="container">
+            <!-- now.year：如果路由传了 now 变量就取年份，否则回退显示 2026 -->
+            <p>&copy; {{ now.year if now else '2026' }} 我的博客 版权所有</p>
+        </div>
+    </footer>
+
+    <!-- 子模板可在 body 末尾插入 JavaScript -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

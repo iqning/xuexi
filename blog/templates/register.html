@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+<!--
+    注册页面模板
+    路由：GET /register → 显示注册表单，POST /register → 提交注册
+-->
+
+{% block title %}注册 - 我的博客{% endblock %}
+
+{% block content %}
+    <div class="auth-container">
+        <h1>注册新账号</h1>
+
+        <!--
+            注册表单
+            method="POST"：注册信息通过请求体传输，不在 URL 上暴露密码
+            action 为空：提交到当前 URL，即 /register
+        -->
+        <form method="POST" action="" class="auth-form">
+            <!-- 用户名 -->
+            <div class="form-group">
+                <label for="username">用户名 *</label>
+                <!--
+                    name="username"：后端通过 request.form['username'] 获取
+                    minlength="2" maxlength="50"：限制长度，匹配数据库 VARCHAR(50)
+                    autocomplete="username"：浏览器提示保存用户名
+                -->
+                <input type="text" id="username" name="username" required
+                       minlength="2" maxlength="50"
+                       autocomplete="username" autofocus
+                       placeholder="请输入用户名（2-50个字符）">
+            </div>
+
+            <!-- 昵称 -->
+            <div class="form-group">
+                <label for="nickname">昵称</label>
+                <!--
+                    昵称选填，用于文章作者显示和评论署名。
+                    不填的话后端可用用户名作为默认昵称
+                -->
+                <input type="text" id="nickname" name="nickname"
+                       maxlength="50"
+                       placeholder="取个好听的名字吧（选填）">
+            </div>
+
+            <!-- 密码 -->
+            <div class="form-group">
+                <label for="password">密码 *</label>
+                <!--
+                    type="password"：输入显示为圆点
+                    minlength="6"：密码最小长度要求
+                    autocomplete="new-password"：告诉浏览器这是"设置新密码"，
+                    部分浏览器会提示生成强密码
+                -->
+                <input type="password" id="password" name="password" required
+                       minlength="6"
+                       autocomplete="new-password"
+                       placeholder="请输入密码（至少6位）">
+            </div>
+
+            <!-- 确认密码 -->
+            <div class="form-group">
+                <label for="password_confirm">确认密码 *</label>
+                <!--
+                    两次输入密码，后端比对是否一致，防止用户输错。
+                    浏览器层面无法做这个校验，需要后端处理
+                -->
+                <input type="password" id="password_confirm" name="password_confirm" required
+                       minlength="6"
+                       autocomplete="new-password"
+                       placeholder="请再次输入密码">
+            </div>
+
+            <!-- 提交按钮 -->
+            <button type="submit" class="btn btn-primary btn-block">注册</button>
+        </form>
+
+        <!-- 跳转到登录页的引导链接 -->
+        <p class="auth-switch">
+            已有账号？<a href="{{ url_for('login') }}">立即登录</a>
+        </p>
+    </div>
+{% endblock %}

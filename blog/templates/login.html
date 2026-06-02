@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+<!--
+    登录页面模板
+    路由：GET /login → 显示登录表单，POST /login → 提交登录
+-->
+
+{% block title %}登录 - 我的博客{% endblock %}
+
+{% block content %}
+    <div class="auth-container">
+        <h1>登录</h1>
+
+        <!--
+            登录表单
+            method="POST"：账号密码通过请求体传输，不在 URL 上暴露
+            action 为空字符串：表单提交到当前 URL，即 /login
+        -->
+        <form method="POST" action="" class="auth-form">
+{# 注：用 Flask-WTF 时需在表单里加 csrf_token()，目前是纯 HTML 表单 #}
+
+            <!-- 用户名输入 -->
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <!--
+                    name="username"：提交后 Flask 用 request.form['username'] 获取
+                    autocomplete="username"：浏览器会自动记住用户名，下次自动填充
+                    autofocus：页面加载后光标自动落在这个输入框上
+                -->
+                <input type="text" id="username" name="username" required
+                       autocomplete="username" autofocus
+                       placeholder="请输入用户名">
+            </div>
+
+            <!-- 密码输入 -->
+            <div class="form-group">
+                <label for="password">密码</label>
+                <!--
+                    type="password"：输入内容显示为圆点，防止旁人看到
+                    autocomplete="current-password"：浏览器可安全填充已保存的密码
+                -->
+                <input type="password" id="password" name="password" required
+                       autocomplete="current-password"
+                       placeholder="请输入密码">
+            </div>
+
+            <!-- 提交按钮 -->
+            <button type="submit" class="btn btn-primary btn-block">登录</button>
+        </form>
+
+        <!-- 跳转到注册页的引导链接 -->
+        <p class="auth-switch">
+            还没有账号？<a href="{{ url_for('register') }}">立即注册</a>
+        </p>
+    </div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+<!--
+    后台管理页面模板
+    路由：GET /admin → 显示文章列表 + 发布表单，POST /admin → 发布新文章
+    需要登录才能访问（路由中加 @login_required）
+-->
+
+{% block title %}后台管理 - 我的博客{% endblock %}
+
+{% block content %}
+    <div class="admin-container">
+        <h1>后台管理</h1>
+
+        <!-- ========== 发布新文章表单 ========== -->
+        <section class="admin-section">
+            <h2>发布新文章</h2>
+            <!--
+                action 为空：提交到当前 URL /admin
+                POST 请求由路由中的 if request.method == 'POST' 分支处理
+            -->
+            <form method="POST" action="" class="admin-form">
+                <!-- 文章标题 -->
+                <div class="form-group">
+                    <label for="title">文章标题 *</label>
+                    <input type="text" id="title" name="title" required
+                           maxlength="200"
+                           placeholder="请输入文章标题">
+                </div>
+
+                <!-- 所属分类：下拉选择框，数据来自后端传入的 categories 列表 -->
+                <div class="form-group">
+                    <label for="category_id">分类</label>
+                    <select id="category_id" name="category_id">
+                        <!-- 默认选项：不归类，value 为空 -->
+                        <option value="">不分类</option>
+                        <!--
+                            遍历所有分类生成 <option>
+                            cat.id 作为 value 提交到后端
+                            cat.name 是用户看到的中文分类名
+                        -->
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- 文章摘要 -->
+                <div class="form-group">
+                    <label for="summary">摘要</label>
+                    <!--
+                        <textarea> 是多行文本输入，不同于 <input> 的单行。
+                        rows="3" 设置默认可见 3 行
+                        maxlength="500" 匹配数据库 VARCHAR(500)
+                    -->
+                    <textarea id="summary" name="summary" rows="3"
+                              maxlength="500"
+                              placeholder="简要描述文章内容（显示在首页列表）"></textarea>
+                </div>
+
+                <!-- 文章正文 -->
+                <div class="form-group">
+                    <label for="content">正文 *</label>
+                    <!--
+                        这里先用普通的 <textarea>。
+                        后续可集成 Markdown 编辑器（如 SimpleMDE），
+                        替换为支持 Markdown 输入和实时预览的编辑器
+                    -->
+                    <textarea id="content" name="content" rows="15" required
+                              placeholder="支持 HTML 标签（后续可改为 Markdown）"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">发布文章</button>
+            </form>
+        </section>
+
+        <!-- ========== 我的文章列表 ========== -->
+        <section class="admin-section">
+            <h2>我的文章</h2>
+
+            {% if my_articles %}
+                <!--
+                    文章管理列表，使用 <table> 因为需要对齐的列结构：
+                    标题 | 分类 | 发布时间 | 操作
+                -->
+                <table class="article-table">
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>分类</th>
+                            <th>发布时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for article in my_articles %}
+                        <tr>
+                            <td>
+                                <!-- 点击标题跳转到文章详情页 -->
+                                <a href="{{ url_for('post', id=article.id) }}">{{ article.title }}</a>
+                            </td>
+                            <td>{{ article.category.name if article.category else '无' }}</td>
+                            <td>{{ article.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <!--
+                                    删除按钮放在一个独立的小表单里。
+                                    用 POST 方法而非 GET 链接：删除操作应该通过 POST 触发，
+                                    防止搜索引擎爬虫或浏览器预加载误删
+                                -->
+                                <form method="POST" action="{{ url_for('delete_article', id=article.id) }}"
+                                      style="display:inline;"
+                                      onsubmit="return confirm('确定要删除《{{ article.title }}》吗？');">
+                                    <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <!-- 还没有写过文章 -->
+                <p class="empty-state">你还没有发布过文章，在上方写一篇吧！</p>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

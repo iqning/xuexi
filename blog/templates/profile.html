@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+<!--
+    个人中心页面模板
+    路由：GET /profile → 显示个人资料表单，POST /profile → 保存修改
+    需要登录才能访问（路由中加 @login_required）
+-->
+
+{% block title %}个人中心 - 我的博客{% endblock %}
+
+{% block content %}
+    <div class="profile-container">
+        <h1>个人中心</h1>
+
+        <!-- ========== 头像区域 ========== -->
+        <div class="profile-avatar-section">
+            <!--
+                显示当前头像。
+                url_for('static', filename='uploads/' + user.avatar)：拼接出头像文件的路径。
+                头像存在 static/uploads/ 下，默认是 default.png
+            -->
+            <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}"
+                 alt="头像"
+                 class="profile-avatar">
+
+            <!--
+                上传新头像的表单。
+                enctype="multipart/form-data" 必须加！这是文件上传的关键，
+                不加的话浏览器只发文件名，不发文件内容。
+            -->
+            <form method="POST" action="" enctype="multipart/form-data" class="avatar-upload-form">
+                <div class="form-group">
+                    <label for="avatar">更换头像</label>
+                    <!--
+                        type="file"：弹出文件选择器
+                        accept="image/*"：只显示图片文件，过滤掉其他类型
+                    -->
+                    <input type="file" id="avatar" name="avatar"
+                           accept="image/jpeg,image/png,image/gif">
+                </div>
+                <button type="submit" name="action" value="update_avatar" class="btn btn-primary">
+                    上传头像
+                </button>
+            </form>
+        </div>
+
+        <!-- ========== 个人资料编辑表单 ========== -->
+        <section class="profile-form-section">
+            <h2>编辑资料</h2>
+            <!--
+                和头像上传共用同一个 URL /profile，
+                通过提交按钮的 name="action" 值来区分操作类型：
+                - name="action" value="update_profile" → 更新资料
+                - name="action" value="update_avatar"  → 更新头像
+            -->
+            <form method="POST" action="" class="profile-form">
+                <!-- 用户名：只读，不允许修改 -->
+                <div class="form-group">
+                    <label for="username">用户名（不可修改）</label>
+                    <!--
+                        readonly：字段不可编辑但会随表单提交。
+                        disabled 的字段不会提交，所以用 readonly
+                    -->
+                    <input type="text" id="username"
+                           value="{{ current_user.username }}" readonly>
+                </div>
+
+                <!-- 昵称 -->
+                <div class="form-group">
+                    <label for="nickname">昵称</label>
+                    <!--
+                        用 value 把当前值预填进输入框。
+                        用户打开页面就能看到已设置的内容，直接修改即可
+                    -->
+                    <input type="text" id="nickname" name="nickname"
+                           maxlength="50"
+                           value="{{ current_user.nickname or '' }}"
+                           placeholder="设置一个显示昵称">
+                </div>
+
+                <!-- 个人简介 -->
+                <div class="form-group">
+                    <label for="bio">个人简介</label>
+                    <!--
+                        textarea 的预填值放在标签之间，不像 input 用 value 属性。
+                        maxlength="200" 匹配数据库 VARCHAR(200)
+                    -->
+                    <textarea id="bio" name="bio" rows="3"
+                              maxlength="200"
+                              placeholder="简单介绍一下自己">{{ current_user.bio or '' }}</textarea>
+                </div>
+
+                <!-- 提交按钮：name="action" 的值帮后端区分是哪个操作 -->
+                <button type="submit" name="action" value="update_profile" class="btn btn-primary">
+                    保存修改
+                </button>
+            </form>
+        </section>
+
+        <!-- ========== 账号信息 ========== -->
+        <section class="profile-info-section">
+            <h2>账号信息</h2>
+            <ul class="profile-info-list">
+                <li>用户名：{{ current_user.username }}</li>
+                <!-- strftime 格式化注册时间为可读格式 -->
+                <li>注册时间：{{ current_user.created_at.strftime('%Y-%m-%d %H:%M') }}</li>
+            </ul>
+        </section>
+    </div>
+{% endblock %}
