@@ -6,11 +6,18 @@
     需要登录才能访问（路由中加 @login_required）
 -->
 
-{% block title %}后台管理 - 我的博客{% endblock %}
+{% block title %}后台管理 - {{ site_name }}{% endblock %}
+
+<!--
+    在 <head> 中引入 Quill 富文本编辑器的 CSS
+    quill.snow.css 提供了 "snow" 主题的工具栏和编辑区样式
+-->
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+{% endblock %}
 
 {% block content %}
     <div class="admin-container">
-        <h1>后台管理</h1>
 
         <!-- ========== 发布新文章表单 ========== -->
         <section class="admin-section">
@@ -28,7 +35,10 @@
                            placeholder="请输入文章标题">
                 </div>
 
-                <!-- 所属分类：下拉选择框，数据来自后端传入的 categories 列表 -->
+                <!--
+                    所属分类：下拉选择框
+                    需要添加新分类？用左侧侧边栏"文章分类"旁的 + 按钮
+                -->
                 <div class="form-group">
                     <label for="category_id">分类</label>
                     <select id="category_id" name="category_id">
@@ -58,16 +68,15 @@
                               placeholder="简要描述文章内容（显示在首页列表）"></textarea>
                 </div>
 
-                <!-- 文章正文 -->
+                <!-- 文章正文：使用 Quill 富文本编辑器 -->
                 <div class="form-group">
                     <label for="content">正文 *</label>
                     <!--
-                        这里先用普通的 <textarea>。
-                        后续可集成 Markdown 编辑器（如 SimpleMDE），
-                        替换为支持 Markdown 输入和实时预览的编辑器
+                        Quill 编辑器挂载到这个 div 上，而不是 <textarea>
+                        下面隐藏的 <input> 用来在表单提交时携带编辑器中的 HTML 内容
                     -->
-                    <textarea id="content" name="content" rows="15" required
-                              placeholder="支持 HTML 标签（后续可改为 Markdown）"></textarea>
+                    <div id="editor-container"></div>
+                    <input type="hidden" name="content" id="content">
                 </div>
 
                 <button type="submit" class="btn btn-primary">发布文章</button>
@@ -103,6 +112,11 @@
                             <td>{{ article.created_at.strftime('%Y-%m-%d') }}</td>
                             <td>
                                 <!--
+                                    编辑按钮：跳转到文章编辑页面
+                                    样式和删除按钮保持一致的尺寸
+                                -->
+                                <a href="{{ url_for('edit_article', id=article.id) }}" class="btn btn-primary btn-sm">编辑</a>
+                                <!--
                                     删除按钮放在一个独立的小表单里。
                                     用 POST 方法而非 GET 链接：删除操作应该通过 POST 触发，
                                     防止搜索引擎爬虫或浏览器预加载误删
@@ -123,4 +137,59 @@
             {% endif %}
         </section>
     </div>
+{% endblock %}
+
+<!--
+    在页面底部加载 Quill 的 JavaScript 并初始化编辑器
+    放在 body 末尾可以确保 DOM 元素已经渲染完毕
+-->
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script>
+    /*
+     * 初始化 Quill 富文本编辑器
+     * theme: 'snow' — 使用白色工具栏主题，和博客风格统一
+     * modules.toolbar — 配置工具栏按钮：
+     *   - header: 标题级别（H1/H2/H3/正文）
+     *   - bold/italic/underline/strike: 加粗/斜体/下划线/删除线
+     *   - list: 有序列表/无序列表
+     *   - blockquote/code-block: 引用块/代码块
+     *   - link/image: 插入链接/图片
+     *   - clean: 清除格式
+     */
+    const quill = new Quill('#editor-container', {
+        theme: 'snow',
+        placeholder: '请输入文章正文...',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],  // H1, H2, H3, 正文
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                ['blockquote', 'code-block'],
+                ['link', 'image'],
+                ['clean']                           // 清除格式
+            ]
+        }
+    });
+
+    /*
+     * 把工具栏移到编辑区下方
+     * Quill 默认把 .ql-toolbar 渲染在 .ql-container 前面（上方）
+     * 用 after() 把它移到后面，工具栏就出现在底部了
+     */
+    const toolbar = document.querySelector('.ql-toolbar');
+    const editor = document.querySelector('.ql-container');
+    if (toolbar && editor) {
+        editor.after(toolbar);
+    }
+
+    /*
+     * 表单提交前：把 Quill 编辑器的 HTML 内容同步到隐藏字段
+     * 这样后端的 request.form.get('content') 就能正常获取富文本内容
+     */
+    document.querySelector('.admin-form').addEventListener('submit', function() {
+        document.getElementById('content').value = quill.root.innerHTML;
+    });
+
+</script>
 {% endblock %}

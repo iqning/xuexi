@@ -6,7 +6,7 @@
     需要登录才能访问（路由中加 @login_required）
 -->
 
-{% block title %}个人中心 - 我的博客{% endblock %}
+{% block title %}个人中心 - {{ site_name }}{% endblock %}
 
 {% block content %}
     <div class="profile-container">
@@ -88,6 +88,25 @@
                     <textarea id="bio" name="bio" rows="3"
                               maxlength="200"
                               placeholder="简单介绍一下自己">{{ current_user.bio or '' }}</textarea>
+                </div>
+
+                <!-- 网易云音乐歌曲 ID -->
+                <div class="form-group">
+                    <label for="music_id">🎵 侧边栏音乐（网易云歌曲 ID）</label>
+                    <!--
+                        用户填入网易云音乐的歌曲 ID，侧边栏自动生成外链播放器。
+                        获取方式：打开网易云网页版 → 歌曲详情页 → URL 中的 id 参数
+                        例如 https://music.163.com/#/song?id=123456 → 填 123456
+                        留空则不显示播放器
+                    -->
+                    <input type="text" id="music_id" name="music_id"
+                           maxlength="30"
+                           value="{{ current_user.music_id or '' }}"
+                           placeholder="例如 123456，留空则不显示播放器">
+                    <small class="form-hint">
+                        💡 提示：在任意页面的<b>侧边栏</b>中可以直接搜索歌名切换歌曲，无需手动找 ID 哦～
+                        <br>这里保留作为高级设置，方便你精确指定歌曲。
+                    </small>
                 </div>
 
                 <!-- 提交按钮：name="action" 的值帮后端区分是哪个操作 -->

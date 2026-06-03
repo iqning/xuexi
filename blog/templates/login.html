@@ -1,56 +1,145 @@
-{% extends 'base.html' %}
+{% extends 'auth_base.html' %}
 
 <!--
     登录页面模板
-    路由：GET /login → 显示登录表单，POST /login → 提交登录
+    布局：左右分栏
+      左侧 — 花海图片展示区
+      右侧 — 登录表单（配色取自花海天空蓝，与左侧协调）
 -->
 
-{% block title %}登录 - 我的博客{% endblock %}
+{% block title %}登录 - {{ site_name }}{% endblock %}
+
+<!-- 登录页专属样式：从花海图片提取的蓝白配色 -->
+{% block head %}
+<style>
+    /* ── 右侧表单区：淡蓝白渐变底，呼应左侧蓝天 ── */
+    .auth-form-side {
+        background: linear-gradient(180deg, #ecf4fa 0%, #f6f9fc 40%, #fefefe 100%);
+    }
+
+    /* ── 表单卡片：毛玻璃效果，半透白 + 模糊 ── */
+    .auth-form-wrapper {
+        background: rgba(255, 255, 255, 0.55);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(40, 120, 180, 0.10),
+                    0 2px 8px rgba(40, 100, 160, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.40);
+    }
+
+    /* ── 标题下方装饰线：天空蓝色 ── */
+    .auth-form-wrapper h2 {
+        position: relative;
+        padding-bottom: 16px;
+    }
+    .auth-form-wrapper h2::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 48px;
+        height: 3px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, #2890d0, #5aacdf);
+    }
+
+    /* ── 按钮：天空蓝渐变，取自图片中的蓝色 ── */
+    .auth-form-wrapper .btn-primary {
+        background: linear-gradient(135deg, #3898d0 0%, #2890d0 100%);
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 14px rgba(40, 144, 208, 0.30);
+        transition: all 0.25s;
+    }
+    .auth-form-wrapper .btn-primary:hover {
+        background: linear-gradient(135deg, #2890d0 0%, #1a78b8 100%);
+        box-shadow: 0 6px 20px rgba(40, 144, 208, 0.40);
+        transform: translateY(-1px);
+    }
+
+    /* ── 链接：天空蓝 ── */
+    .auth-form-wrapper .auth-switch a {
+        color: #3898d0;
+        font-weight: 500;
+    }
+    .auth-form-wrapper .auth-switch a:hover {
+        color: #1a78b8;
+    }
+
+    /* ── 输入框聚焦：蓝色光晕，替代全局的拿铁色 ── */
+    .auth-form-wrapper .form-group input:focus {
+        border-color: #5aacdf;
+        box-shadow: 0 0 0 3px rgba(40, 144, 208, 0.10);
+    }
+
+    /* ── 左侧遮罩渐变：加深底部，让白色文字更清晰 ── */
+    .auth-media-side::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg,
+                    rgba(0,0,0,0.05) 0%,
+                    rgba(0,0,0,0.00) 40%,
+                    rgba(0,0,0,0.25) 100%);
+        pointer-events: none;
+    }
+    /* 让文字在遮罩上方 */
+    .auth-media-content {
+        position: relative;
+        z-index: 1;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-    <div class="auth-container">
-        <h1>登录</h1>
-
-        <!--
-            登录表单
-            method="POST"：账号密码通过请求体传输，不在 URL 上暴露
-            action 为空字符串：表单提交到当前 URL，即 /login
-        -->
-        <form method="POST" action="" class="auth-form">
-{# 注：用 Flask-WTF 时需在表单里加 csrf_token()，目前是纯 HTML 表单 #}
-
-            <!-- 用户名输入 -->
-            <div class="form-group">
-                <label for="username">用户名</label>
-                <!--
-                    name="username"：提交后 Flask 用 request.form['username'] 获取
-                    autocomplete="username"：浏览器会自动记住用户名，下次自动填充
-                    autofocus：页面加载后光标自动落在这个输入框上
-                -->
-                <input type="text" id="username" name="username" required
-                       autocomplete="username" autofocus
-                       placeholder="请输入用户名">
-            </div>
-
-            <!-- 密码输入 -->
-            <div class="form-group">
-                <label for="password">密码</label>
-                <!--
-                    type="password"：输入内容显示为圆点，防止旁人看到
-                    autocomplete="current-password"：浏览器可安全填充已保存的密码
-                -->
-                <input type="password" id="password" name="password" required
-                       autocomplete="current-password"
-                       placeholder="请输入密码">
-            </div>
-
-            <!-- 提交按钮 -->
-            <button type="submit" class="btn btn-primary btn-block">登录</button>
-        </form>
-
-        <!-- 跳转到注册页的引导链接 -->
-        <p class="auth-switch">
-            还没有账号？<a href="{{ url_for('register') }}">立即注册</a>
-        </p>
+<div class="auth-split">
+    <!-- ========== 左侧：花海图片展示区 ========== -->
+    <div class="auth-media-side" style="background: url('{{ url_for('static', filename='picture/huahai.jpg') }}') center/cover;">
+        <div class="auth-media-content">
+            <h1 class="auth-media-title">欢迎回来</h1>
+            <p class="auth-media-subtitle">记录生活，分享思考</p>
+        </div>
     </div>
+
+    <!-- ========== 右侧：登录表单 ========== -->
+    <div class="auth-form-side">
+        <div class="auth-form-wrapper">
+            <h2>登录</h2>
+
+            <!--
+                登录表单
+                method="POST"：账号密码通过请求体传输，不在 URL 上暴露
+            -->
+            <form method="POST" action="" class="auth-form">
+
+                <!-- 用户名输入 -->
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" required
+                           autocomplete="username" autofocus
+                           placeholder="请输入用户名">
+                </div>
+
+                <!-- 密码输入 -->
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" required
+                           autocomplete="current-password"
+                           placeholder="请输入密码">
+                </div>
+
+                <!-- 提交按钮 -->
+                <button type="submit" class="btn btn-primary btn-block">登录</button>
+            </form>
+
+            <!-- 跳转到注册页的引导链接 -->
+            <p class="auth-switch">
+                还没有账号？<a href="{{ url_for('register') }}">立即注册</a>
+            </p>
+        </div>
+    </div>
+</div>
 {% endblock %}

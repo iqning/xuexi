@@ -7,7 +7,7 @@
 -->
 
 <!-- 浏览器标签页标题：使用文章标题 -->
-{% block title %}{{ post.title }} - 我的博客{% endblock %}
+{% block title %}{{ post.title }} - {{ site_name }}{% endblock %}
 
 {% block content %}
     <!-- ========== 文章正文区 ========== -->
@@ -33,6 +33,15 @@
             <span>
                 分类：
                 <a href="{{ url_for('category', id=post.category.id) }}">{{ post.category.name }}</a>
+            </span>
+            {% endif %}
+            <!--
+                编辑链接：只有文章作者才能看到，纯文字无样式
+                紧跟在分类后面，像元信息的一部分
+            -->
+            {% if current_user.id == post.author_id %}
+            <span>
+                <a href="{{ url_for('edit_article', id=post.id) }}">编辑</a>
             </span>
             {% endif %}
         </div>
@@ -82,7 +91,7 @@
                 method="POST"：评论数据通过请求体发送，不会暴露在 URL 上。
                 action 用 url_for 动态生成，指向处理评论提交的路由函数
             -->
-            <form method="POST" action="{{ url_for('comment', id=post.id) }}">
+            <form method="POST" action="{{ url_for('add_comment', id=post.id) }}">
                 <!-- 昵称输入：required 表示必填，浏览器会阻止空值提交 -->
                 <div class="form-group">
                     <label for="author_name">昵称 *</label>

@@ -26,6 +26,10 @@ class Config:
     # 可以用 secrets.token_hex(32) 生成一个随机的 64 字符密钥
     SECRET_KEY = 'dev-secret-key-change-in-production-please'
 
+    # ---------- 站点名称 ----------
+    # 出现在浏览器标签页标题、导航栏 LOGO、页脚版权等位置
+    SITE_NAME = '拾光小筑'
+
     # ---------- 数据库连接 ----------
     # 格式：mysql+pymysql://用户名:密码@主机地址:端口/数据库名?参数
     #   mysql+pymysql → 使用 PyMySQL 驱动连接 MySQL
@@ -50,3 +54,9 @@ class Config:
     # ---------- 分页配置 ----------
     # 每页显示的文章数量
     POSTS_PER_PAGE = 6
+
+    # ---------- 开发模式 ----------
+    # 调试模式：修改代码后自动重启，修改模板后自动重载
+    DEBUG = True
+    # 明确开启模板自动重载（DEBUG=True 时默认开启，这里显式声明）
+    TEMPLATES_AUTO_RELOAD = True

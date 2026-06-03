@@ -1,34 +1,34 @@
 /* =============================================
-   个人博客 - 全局样式表（奶油文艺风）
-   设计思路：暖奶油底色、拿铁棕主调、衬线标题、
-   柔和阴影 —— 像翻一本纸质文艺杂志
+   个人博客 - 全局样式表（清新蓝白风）
+   设计思路：取自花海图片的天空蓝为主调，搭配冷白底色、
+   浅蓝灰文字、轻透阴影 —— 像春日清晨的微风拂面
    ============================================= */
 
 /* =============================================
    一、CSS 变量 — 换肤只需改这里
    ============================================= */
 :root {
-    /* ── 主色系：拿铁暖棕，比冷色调更有人文温度 ── */
-    --color-primary: #b6936a;
-    --color-primary-hover: #9a7a54;
-    --color-primary-light: #faf0e3;
+    /* ── 主色系：天空蓝，来自花海图片的天空色 ── */
+    --color-primary: #5aacdf;
+    --color-primary-hover: #3898d0;
+    --color-primary-light: #eaf5fb;
 
-    /* ── 背景色系：奶油调，模拟纸张质感 ── */
-    --color-bg: #fdf7f0;              /* 暖奶油底 */
-    --color-white: #fffdf9;           /* 偏暖的白 */
-    --color-card: #fffdf9;
+    /* ── 背景色系：清冷蓝白，干净透气 ── */
+    --color-bg: #f5f9fc;              /* 淡蓝白底，清新透亮 */
+    --color-white: #ffffff;           /* 纯白 */
+    --color-card: #ffffff;
 
-    /* ── 文字色系：深褐而非纯黑，更柔和护眼 ── */
-    --color-text: #4a3828;
-    --color-text-light: #8b7355;
-    --color-text-lighter: #b8a590;
+    /* ── 文字色系：冷灰蓝，安静不沉闷 ── */
+    --color-text: #3d5060;
+    --color-text-light: #7a95a8;
+    --color-text-lighter: #a8bfcf;
 
-    /* ── 边框和分割线：米色调 ── */
-    --color-border: #e8dcc8;
+    /* ── 边框和分割线：浅蓝灰 ── */
+    --color-border: #dce8f0;
 
-    /* ── 危险/删除：干枯玫瑰红，比正红更文艺 ── */
-    --color-danger: #c97d75;
-    --color-danger-hover: #a86058;
+    /* ── 危险/删除：柔珊瑚红，在冷色调中保留一点暖意 ── */
+    --color-danger: #e08880;
+    --color-danger-hover: #c07068;
 
     /* ── 间距 ── */
     --space-xs: 4px;
@@ -38,23 +38,23 @@
     --space-xl: 32px;
     --space-2xl: 48px;
 
-    /* ── 圆角：比之前更柔和 ── */
-    --radius-sm: 8px;
-    --radius: 12px;
-    --radius-lg: 18px;
+    /* ── 圆角：适度圆润 ── */
+    --radius-sm: 10px;
+    --radius: 14px;
+    --radius-lg: 20px;
 
-    /* ── 阴影：更轻更柔，模拟纸页层叠 ── */
-    --shadow-sm: 0 1px 4px rgba(74, 56, 40, 0.06);
-    --shadow: 0 4px 16px rgba(74, 56, 40, 0.07);
-    --shadow-lg: 0 8px 32px rgba(74, 56, 40, 0.10);
+    /* ── 阴影：淡蓝调，清爽通透 ── */
+    --shadow-sm: 0 1px 4px rgba(56, 152, 208, 0.06);
+    --shadow: 0 4px 16px rgba(56, 152, 208, 0.07);
+    --shadow-lg: 0 8px 32px rgba(56, 152, 208, 0.09);
 
     /* ── 最大宽度 ── */
     --max-width: 1060px;
 
     /* ── 侧边栏宽度 ── */
-    --sidebar-width: 300px;
+    --sidebar-width: 280px;
 
-    /* ── 标题字体：衬线体，文艺气质的关键 ── */
+    /* ── 标题字体：衬线体，保留文艺气质 ── */
     --font-heading: "Noto Serif SC", "STSong", "SimSun", "Georgia",
                     "Times New Roman", serif;
 }
@@ -121,13 +121,13 @@ img {
 
 .main-layout {
     display: flex;
-    align-items: flex-start;   /* 顶部对齐，不让侧边栏和内容区互相拉伸 */
+    align-items: flex-start;      /* 顶部对齐，不让侧边栏和内容区互相拉伸 */
     gap: var(--space-xl);
     padding-top: var(--space-sm);
     padding-bottom: var(--space-2xl);
 }
 
-/* ── 侧边栏在左，内容区在右 ── */
+/* ── 内容区在左，侧边栏在右（通过 row-reverse 实现） ── */
 .sidebar {
     width: var(--sidebar-width);
     flex-shrink: 0;
@@ -136,6 +136,188 @@ img {
 .content-area {
     flex: 1;
     min-width: 0;
+}
+
+/* =============================================
+   三点五、Hero 横幅 — 首页顶部展示区
+   ============================================= */
+
+/* Hero 整体容器：渐变背景，居中内容 */
+.hero-section {
+    background: linear-gradient(135deg, #e8f4fd 0%, #d0eaf8 40%, #f5f9fc 100%);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2xl) var(--space-xl);
+    margin-bottom: var(--space-xl);
+    text-align: center;
+    /* 微妙的顶部装饰：一条渐变色带 */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hero 背景装饰：右上角柔光光晕 */
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(90, 172, 223, 0.25), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Hero 背景装饰：左下角柔光光晕 */
+.hero-section::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    left: -40px;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, rgba(90, 172, 223, 0.18), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Hero 内容区：相对定位确保文字在装饰之上 */
+.hero-inner {
+    position: relative;
+    z-index: 1;
+}
+
+/* Hero 头像：大号圆形 */
+.hero-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--color-white);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--space-md);
+}
+
+/* Hero 昵称：大号加粗 */
+.hero-nickname {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 var(--space-xs) 0;
+}
+
+/* Hero 简介：次一级文字 */
+.hero-bio {
+    font-size: 1rem;
+    color: var(--color-text-light);
+    max-width: 500px;
+    margin: 0 auto var(--space-lg) auto;
+    line-height: 1.6;
+}
+
+/* Hero 统计数据行：水平排列 */
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-lg);
+}
+
+/* 单个统计项 */
+.hero-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 统计数字：大号加粗，主题色 */
+.hero-stat-num {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1.2;
+}
+
+/* 统计标签：小号灰色文字 */
+.hero-stat-label {
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+}
+
+/* 统计项之间的竖线分隔 */
+.hero-stat-divider {
+    width: 1px;
+    height: 36px;
+    background-color: var(--color-border);
+}
+
+/* ── 波浪分割线：Hero 下方的 SVG 波浪 ── */
+.hero-wave {
+    color: #e8f4fd;  /* 与 Hero 背景起始色一致，形成无缝衔接 */
+    margin-bottom: var(--space-xl);
+    line-height: 0;  /* 消除 SVG 下方的空白间隙 */
+}
+
+.hero-wave svg {
+    width: 100%;
+    height: 50px;
+    display: block;
+}
+
+/* =============================================
+   三点六、底部统计栏 — 首页专属
+   ============================================= */
+
+/* 统计栏容器：全宽，卡片风格 */
+.stats-bar {
+    margin-top: var(--space-xl);
+    background: linear-gradient(135deg, #f0f7fb 0%, #fafcfe 100%);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    padding: var(--space-sm) var(--space-lg);
+}
+
+/* 内部 flex 排列：三项居中 */
+.stats-bar-inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-xl);
+}
+
+/* 单个统计项 */
+.stats-bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+/* 图标 */
+.stats-bar-icon {
+    font-size: 1.1rem;
+}
+
+/* 数字：大号粗体 */
+.stats-bar-num {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1;
+}
+
+/* 标签：小号浅色 */
+.stats-bar-label {
+    font-size: 0.75rem;
+    color: var(--color-text-lighter);
+    letter-spacing: 0.5px;
+}
+
+/* 分隔线：竖线 */
+.stats-bar-divider {
+    width: 1px;
+    height: 28px;
+    background: linear-gradient(to bottom, transparent, var(--color-border), transparent);
 }
 
 /* =============================================
@@ -185,28 +367,104 @@ img {
 
 .site-nav a:hover {
     color: var(--color-primary);
-    background-color: var(--color-primary-light);
+    background-color: #eaf5fb;
 }
 
 .nav-user {
     color: var(--color-text-light);
     font-size: 0.88rem;
     padding: 6px 4px;
+    /* 头像和用户名水平居中 */
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* 导航栏中的头像小圆形 */
+.nav-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--color-border);
+}
+
+/* 下拉箭头，小三角 */
+.dropdown-arrow {
+    font-size: 0.6rem;
+    margin-left: 2px;
+    color: var(--color-text-lighter);
+    transition: transform 0.2s;
+}
+
+/* 下拉菜单容器：相对定位，作为下拉菜单的锚点 */
+.nav-user-dropdown {
+    position: relative;
+    display: inline-flex;
+}
+
+/* 下拉菜单：默认隐藏，hover 时显示 */
+.nav-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 6px;
+    background: var(--color-card);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    min-width: 120px;
+    /* 默认隐藏 */
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+    z-index: 150;
+    overflow: hidden;
+}
+
+/* 菜单中的链接 */
+.nav-dropdown-menu a {
+    display: block;
+    padding: 8px 16px;
+    color: var(--color-text);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+
+.nav-dropdown-menu a:hover {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+/* hover 时显示下拉菜单 */
+.nav-user-dropdown:hover .nav-dropdown-menu {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* hover 时箭头旋转 */
+.nav-user-dropdown:hover .dropdown-arrow {
+    transform: rotate(180deg);
 }
 
 /* =============================================
    五、侧边栏 — 个人信息卡片（奶油文艺版）
    ============================================= */
 
-/* 个人信息卡片：暖色渐变，仿旧纸色调 */
+/* 个人信息卡片：白色背景 + 轻微阴影，形成独立卡片 */
 .profile-card {
-    background: linear-gradient(165deg, #cfb594 0%, #bd9b72 35%, #a68156 100%);
+    background: var(--color-card);
     border-radius: var(--radius-lg);
-    padding: var(--space-xl) var(--space-lg);
+    padding: 36px var(--space-md);  /* 左右减到16px，给播放器更多宽度 */
     text-align: center;
-    color: #fffdf9;
+    color: var(--color-text);
     margin-bottom: var(--space-lg);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-sm);
 }
 
 .profile-card .avatar {
@@ -214,9 +472,9 @@ img {
     height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid rgba(255, 253, 249, 0.6);
+    border: 3px solid var(--color-primary-light);
     margin-bottom: var(--space-md);
-    background-color: #e8dcc8;
+    background-color: var(--color-border);
 }
 
 .profile-card .nickname {
@@ -231,13 +489,13 @@ img {
     font-size: 0.85rem;
     opacity: 0.85;
     line-height: 1.6;
-    /* 最多显示 3 行 */
     display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
 
 /* 分类卡片 */
 .widget {
@@ -248,13 +506,131 @@ img {
     box-shadow: var(--shadow-sm);
 }
 
+/* ====== 音乐播放器卡片 ====== */
+.music-widget {
+    padding: 0;
+    overflow: visible;  /* 允许搜索结果下拉溢出卡片边界 */
+}
+
+/* ---- 搜索框区域 ---- */
+.music-search-wrap {
+    position: relative;  /* 为下拉列表提供定位参照 */
+    padding: var(--space-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.music-search-input {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text);
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.music-search-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(90, 172, 223, 0.18);
+}
+
+/* ---- 搜索结果下拉列表 ---- */
+.music-search-results {
+    position: absolute;
+    /* 下拉列表：左对齐，占满卡片宽度，定位在搜索区域下方 */
+    left: 0;
+    right: 0;
+    top: 100%;
+    z-index: 100;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    box-shadow: var(--shadow-lg);
+    max-height: 120px;  /* 约2条高度，其余滚动查看 */
+    overflow-y: auto;
+}
+
+/* 下拉列表的滚动条美化 */
+.music-search-results::-webkit-scrollbar {
+    width: 4px;
+}
+
+.music-search-results::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+}
+
+/* ---- 单条搜索结果 ---- */
+.music-search-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--color-border);
+    transition: background 0.15s;
+}
+
+.music-search-item:last-child {
+    border-bottom: none;
+}
+
+/* hover 或键盘选中时，用主题色浅底高亮 */
+.music-search-item:hover,
+.music-search-item.active {
+    background: var(--color-primary-light);
+}
+
+.music-search-item .song-info {
+    flex: 1;
+    min-width: 0;  /* 让文本截断生效 */
+}
+
+.music-search-item .song-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text);
+    /* 歌名太长时省略号截断 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.music-search-item .song-artist {
+    font-size: 0.75rem;
+    color: var(--color-text-light);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* "没有找到相关歌曲" 提示 */
+.music-search-empty {
+    padding: 16px 12px;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--color-text-light);
+}
+
+/* ---- 播放器区域 ---- */
+.music-player iframe {
+    display: block;
+    width: 100%;
+    height: 105px;
+}
+
 .widget h3 {
     font-family: var(--font-heading);
     font-size: 0.95rem;
     font-weight: 600;
     margin-bottom: var(--space-md);
     padding-bottom: var(--space-sm);
-    border-bottom: 2px solid var(--color-primary);
+    border-bottom: 1px solid #333;
     color: var(--color-text);
     letter-spacing: 0.5px;
 }
@@ -277,7 +653,7 @@ img {
 }
 
 .category-list a:hover {
-    background-color: var(--color-primary-light);
+    background-color: #eaf5fb;
     color: var(--color-primary);
 }
 
@@ -288,6 +664,10 @@ img {
 /* 页面头部：显示"最新文章"/"分类：xxx"等标题 */
 .page-header {
     margin-bottom: var(--space-lg);
+    /* flex 布局让标题和 "+" 按钮在同一行，垂直居中对齐 */
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
 }
 
 .page-header h1 {
@@ -295,43 +675,114 @@ img {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--color-text);
+    /* 标题占据剩余空间，把按钮推到右边 */
+    flex: 1;
 }
 
-.post-list {
+/* "+" 发布按钮：圆形图标，低调但有交互反馈 */
+.btn-add-post {
+    /* 圆形按钮 */
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    /* 居中显示 + 号 */
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* 配色：无边框，与页面融合 */
+    color: var(--color-primary);
+    background: transparent;
+    font-size: 1.4rem;
+    font-weight: 300;
+    line-height: 1;
+    text-decoration: none;
+    /* 过渡动画 */
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.btn-add-post:hover {
+    background: var(--color-primary-light);
+    color: var(--color-primary-hover);
+    transform: scale(1.1);
+}
+
+/* ── 文章列表：桌面端 2 列网格 ── */
+.post-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: var(--space-md);
 }
 
+/* ── 文章卡片 ── */
 .post-card {
     background-color: var(--color-card);
     border-radius: var(--radius);
     padding: var(--space-lg);
     box-shadow: var(--shadow-sm);
-    transition: transform 0.2s, box-shadow 0.2s;
-    /* 左侧加一条细线，模拟书页边缘 */
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-left-color 0.3s;
+    /* 左侧加一条细线，hover 时变成主题色 */
     border-left: 3px solid transparent;
+    display: flex;
+    flex-direction: column;
 }
 
+/* hover：卡片上浮 + 阴影加深 */
 .post-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
+    transform: translateY(-6px);
+    box-shadow: 0 8px 24px rgba(90, 172, 223, 0.18);
     border-left-color: var(--color-primary);
 }
 
+/* ── 首篇大卡片：横跨两列 ── */
+.post-card-hero {
+    grid-column: 1 / -1;
+    padding: var(--space-xl);
+}
+
+.post-card-hero .post-title {
+    font-size: 1.5rem !important;
+}
+
+.post-card-hero .post-summary {
+    -webkit-line-clamp: 5;  /* 大卡片摘要多显示几行 */
+    line-clamp: 5;
+}
+
+/* ── 文章标题 ── */
 .post-card .post-title {
     font-family: var(--font-heading);
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 600;
     margin-bottom: var(--space-sm);
+    /* 标题 hover 动画容器 */
+    position: relative;
 }
 
 .post-card .post-title a {
     color: var(--color-text);
+    text-decoration: none;
+    /* 下划线动画用背景渐变模拟 */
+    background-image: linear-gradient(var(--color-primary), var(--color-primary));
+    background-size: 0% 2px;
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    transition: background-size 0.35s ease, color 0.2s;
+    padding-bottom: 2px;
 }
 
 .post-card .post-title a:hover {
     color: var(--color-primary);
+    background-size: 100% 2px;  /* 下划线从左到右滑入 */
+}
+
+/* 元信息中分类链接的下划线动画（比标题更轻） */
+.post-meta a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+.post-meta a:hover {
+    opacity: 0.7;
 }
 
 /* 文章元信息：作者、时间、分类 */
@@ -344,6 +795,13 @@ img {
     margin-bottom: var(--space-md);
 }
 
+/* 单个 meta 项：图标和文字间距 */
+.meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
 /* 文章摘要 */
 .post-summary {
     color: var(--color-text-light);
@@ -354,6 +812,8 @@ img {
     line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    line-height: 1.65;
+    flex: 1;  /* 让摘要撑满剩余空间，把"阅读全文"推到底部 */
 }
 
 /* 阅读全文链接 */
@@ -361,10 +821,17 @@ img {
     font-size: 0.88rem;
     font-weight: 500;
     color: var(--color-primary);
+    text-decoration: none;
+    align-self: flex-start;  /* 不拉伸 */
+    transition: gap 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .read-more:hover {
     color: var(--color-primary-hover);
+    gap: 8px;  /* 箭头向右微移 */
 }
 
 /* =============================================
@@ -421,7 +888,7 @@ img {
     border-left: 4px solid var(--color-primary);
     margin: var(--space-lg) 0;
     padding: var(--space-md) var(--space-lg);
-    background-color: var(--color-primary-light);
+    background-color: #eaf5fb;
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     color: var(--color-text-light);
     font-family: var(--font-heading);
@@ -429,17 +896,17 @@ img {
 }
 
 .post-content code {
-    background-color: #f5efe4;
+    background-color: #eaf5fb;
     padding: 2px 7px;
     border-radius: 4px;
     font-size: 0.9em;
     font-family: "Fira Code", "Consolas", monospace;
-    color: #8b5e3c;
+    color: var(--color-primary-hover);
 }
 
 .post-content pre {
-    background-color: #3d3226;
-    color: #f5efe4;
+    background-color: #3d4a55;
+    color: #eaf5fb;
     padding: var(--space-lg);
     border-radius: var(--radius);
     overflow-x: auto;
@@ -456,6 +923,18 @@ img {
 .post-content img {
     border-radius: var(--radius);
     margin: var(--space-lg) 0;
+}
+
+/* 文章操作按钮区（编辑按钮等） */
+.post-actions {
+    margin-bottom: var(--space-md);
+}
+
+/* 表单底部按钮组（保存 + 取消） */
+.form-actions {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-lg);
 }
 
 /* =============================================
@@ -574,7 +1053,7 @@ img {
     font-size: 0.95rem;
     font-family: inherit;
     color: var(--color-text);
-    background-color: #fefcf8;
+    background-color: var(--color-bg);
     transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 
@@ -597,6 +1076,15 @@ img {
     resize: vertical;
 }
 
+/* 表单字段的提示文字 */
+.form-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--color-text-lighter);
+    line-height: 1.4;
+}
+
 /* =============================================
    十一、按钮
    ============================================= */
@@ -614,11 +1102,22 @@ img {
 
 .btn-primary {
     background-color: var(--color-primary);
-    color: #fffdf9;
+    color: var(--color-white);
 }
 
 .btn-primary:hover {
     background-color: var(--color-primary-hover);
+}
+
+.btn-secondary {
+    background-color: var(--color-white);
+    color: var(--color-text-light);
+    border-color: var(--color-border);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-bg);
+    color: var(--color-text);
 }
 
 .btn-danger {
@@ -629,7 +1128,7 @@ img {
 
 .btn-danger:hover {
     background-color: var(--color-danger);
-    color: #fffdf9;
+    color: var(--color-white);
 }
 
 .btn-sm {
@@ -667,7 +1166,7 @@ img {
 .pagination a:hover {
     background-color: var(--color-primary);
     border-color: var(--color-primary);
-    color: #fffdf9;
+    color: var(--color-white);
 }
 
 .page-info {
@@ -676,25 +1175,127 @@ img {
 }
 
 /* =============================================
-   十三、登录 / 注册页面
+   十三、登录 / 注册页面（认证页面）
    ============================================= */
-.auth-container {
+
+/* ── 认证页面 body：占满视口，去掉导航/页脚的 flex 列布局 ── */
+.auth-page-body {
+    /* 覆盖全局 body 的 flex-direction: column，
+       认证页面不需要给导航和页脚留空间 */
+    display: block;
+    min-height: 100vh;
+    background-color: var(--color-bg);
+}
+
+/* Flash 消息在认证页面中的定位：绝对定位到顶部，不占用布局空间 */
+.auth-page-body .flash-container {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    margin-top: var(--space-md);
+    /* 和全局 flash-container 保持一致的宽度限制 */
+    max-width: 500px;
+    width: calc(100% - var(--space-lg) * 2);
+}
+
+/* =============================================
+   十三-A、登录页：左右分栏布局
+   ============================================= */
+
+/* 分栏容器：占满整个视口高度 */
+.auth-split {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* ── 左侧：媒体展示区 ── */
+/* 背景使用拿铁色渐变，模拟暖调氛围；替换为图片时改 background 即可 */
+.auth-media-side {
+    flex: 3;   /* 占 3/4 宽度 */
+    /* 渐变背景：从深拿铁到浅奶油，营造温暖的视觉过渡 */
+    background: linear-gradient(160deg, #5aacdf 0%, #7cc0e8 30%, #a8d8f2 70%, #f5f9fc 100%);
+    /* 使用 flex 让内部文字居中 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* 最小宽度：窗口太窄时左侧不会被挤没 */
+    min-width: 300px;
+}
+
+/* 媒体区内的文字容器 */
+.auth-media-content {
+    text-align: center;
+    color: var(--color-white);
+    padding: var(--space-2xl);
+}
+
+/* 大标题 */
+.auth-media-title {
+    font-family: var(--font-heading);
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin-bottom: var(--space-md);
+    letter-spacing: 4px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 副标题 */
+.auth-media-subtitle {
+    font-size: 1.1rem;
+    font-weight: 300;
+    opacity: 0.85;
+    letter-spacing: 2px;
+}
+
+/* ── 右侧：表单区 ── */
+.auth-form-side {
+    flex: 1;   /* 占 1/4 宽度 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2xl);
+    background-color: var(--color-bg);
+    /* 最小宽度保证表单不会被挤变形 */
+    min-width: 380px;
+}
+
+/* 表单卡片：白色圆角卡片，带阴影 */
+.auth-form-wrapper {
+    width: 100%;
     max-width: 400px;
-    margin: var(--space-2xl) auto;
     background-color: var(--color-card);
     border-radius: var(--radius-lg);
     padding: var(--space-2xl) var(--space-xl);
     box-shadow: var(--shadow-lg);
 }
 
-.auth-container h1 {
+.auth-form-wrapper h2 {
     font-family: var(--font-heading);
     text-align: center;
     margin-bottom: var(--space-xl);
     font-size: 1.5rem;
     font-weight: 700;
+    color: var(--color-text);
 }
 
+/* =============================================
+   十三-B、注册页：居中布局
+   ============================================= */
+
+/* 居中容器：表单在视口正中央 */
+.auth-centered {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 100vh;
+    padding: var(--space-xl);
+}
+
+/* 跳转链接（"还没有账号？"/"已有账号？"） */
 .auth-switch {
     text-align: center;
     margin-top: var(--space-lg);
@@ -703,7 +1304,7 @@ img {
 }
 
 /* =============================================
-   十四、后台管理页面
+   十四、后台管理 & 富文本编辑器
    ============================================= */
 .admin-container {
     max-width: 800px;
@@ -757,11 +1358,245 @@ img {
 }
 
 .article-table tbody tr:hover {
-    background-color: #fefcf8;
+    background-color: var(--color-bg);
+}
+
+/* ── Quill 富文本编辑器容器 ── */
+#editor-container {
+    /* 最小高度约 4 行文字，随内容自动伸展 */
+    min-height: 160px;
+}
+
+/* Quill 编辑器与博客奶油风格统一 */
+/* 工具栏在底部（JS 移动到了 .ql-container 后面），所以编辑区上方圆角，工具栏下方圆角 */
+.ql-container.ql-snow {
+    border: 1px solid var(--color-border) !important;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background-color: var(--color-white);
+    font-family: inherit;
+    font-size: 1.02rem;
+    color: var(--color-text);
+}
+
+.ql-toolbar.ql-snow {
+    border: 1px solid var(--color-border) !important;
+    border-top: none !important;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    background-color: var(--color-bg);
+}
+
+/* 编辑器聚焦时的高亮效果，和其他输入框保持一致 */
+.ql-container:focus-within {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(182, 147, 106, 0.12);
+}
+
+/* 编辑器内编辑区域的排版，和文章详情页 .post-content 保持一致 */
+.ql-editor {
+    line-height: 1.9;
+    font-size: 1.02rem;
 }
 
 /* =============================================
-   十五、个人中心页面
+   十五、分类管理
+   ============================================= */
+
+/* 标签旁边的小 "+" 按钮，用于快速添加分类 */
+.btn-add-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    /* 微妙底色：不用边框，用浅色填充让按钮在白色卡片上可见 */
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border: none;
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    margin-left: 6px;
+    vertical-align: middle;
+    transition: all 0.2s;
+}
+
+.btn-add-inline:hover {
+    background: #f5e8d6;
+    color: var(--color-primary-hover);
+}
+
+/* 快速添加分类的行内表单（默认隐藏，点击 + 后显示为 flex） */
+.category-inline-form {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+    align-items: center;
+    /* 确保不超出父容器 */
+    max-width: 100%;
+}
+
+.category-inline-form input {
+    flex: 1;
+    /* min-width: 0 允许 input 在 flex 容器中收缩到比内容更小 */
+    min-width: 0;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* 行内表单中的按钮：不允许收缩，防止被挤压变形或溢出 */
+.category-inline-form .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.category-inline-form input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(182, 147, 106, 0.12);
+}
+
+/* 编辑分类按钮（小号文字按钮，保持文艺风格） */
+.btn-edit-cat {
+    display: inline-block;
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    background-color: var(--color-white);
+    color: var(--color-text);
+    transition: all 0.2s;
+    margin-right: var(--space-xs);
+}
+
+.btn-edit-cat:hover {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+/* 编辑分类的模态弹窗 — 遮罩层 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(74, 56, 40, 0.4);
+    /* flex 居中弹窗内容 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+}
+
+/* 模态弹窗 — 白色卡片 */
+.modal-box {
+    background: var(--color-white);
+    border-radius: var(--radius);
+    padding: var(--space-xl);
+    width: 420px;
+    max-width: 90%;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-box h3 {
+    font-family: var(--font-heading);
+    margin-bottom: var(--space-md);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+/* 弹窗底部按钮区域 */
+.modal-actions {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+    margin-top: var(--space-md);
+}
+
+/* 分类描述列：文字较少时用浅色显示 */
+.cat-desc-cell {
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+}
+
+/* ── 侧边栏分类管理 ── */
+
+/* 分类列表项：flex 布局让操作按钮在右侧 */
+.cat-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* 分类链接：占满剩余空间 */
+.cat-item > a {
+    flex: 1;
+}
+
+/* 操作按钮组（编辑 / 删除），默认半透明，hover 时显示 */
+.cat-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* 鼠标悬停在分类项上时，显示操作按钮 */
+.cat-item:hover .cat-actions {
+    opacity: 1;
+}
+
+/* 编辑和删除的小图标按钮，通用样式 */
+.btn-cat-edit,
+.btn-cat-del {
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    transition: all 0.2s;
+}
+
+/* 编辑按钮：拿铁色调 */
+.btn-cat-edit {
+    color: var(--color-primary);
+}
+
+.btn-cat-edit:hover {
+    background: var(--color-primary-light);
+    color: var(--color-primary-hover);
+}
+
+/* 删除按钮：玫瑰色调 */
+.btn-cat-del {
+    color: var(--color-text-lighter);
+}
+
+.btn-cat-del:hover {
+    background: #fdf3f1;
+    color: var(--color-danger);
+}
+
+/* =============================================
+   十六、个人中心页面
    ============================================= */
 .profile-container {
     max-width: 600px;
@@ -840,19 +1675,20 @@ img {
 }
 
 /* =============================================
-   十六、页脚
+   十七、页脚
    ============================================= */
 .site-footer {
     background-color: var(--color-white);
     border-top: 1px solid var(--color-border);
-    padding: var(--space-lg) 0;
+    /* 上下间距收窄，页脚不需要太多空白 */
+    padding: var(--space-sm) 0;
     text-align: center;
     font-size: 0.82rem;
     color: var(--color-text-lighter);
 }
 
 /* =============================================
-   十七、实用工具类
+   十八、实用工具类
    ============================================= */
 .empty-state {
     text-align: center;
@@ -885,31 +1721,31 @@ img {
 }
 
 .flash-success {
-    background-color: #edf3e8;
-    color: #4a6741;
-    border: 1px solid #d4e3c8;
+    background-color: #eef6ea;
+    color: #5a7a50;
+    border: 1px solid #d8e8d0;
 }
 
 .flash-error {
-    background-color: #faf0ee;
-    color: #a86058;
-    border: 1px solid #f0d4cf;
+    background-color: #fdf5f5;
+    color: var(--color-danger-hover);
+    border: 1px solid #f0d8d6;
 }
 
 .flash-info {
-    background-color: #eef4f7;
-    color: #4a6a7a;
-    border: 1px solid #d0e0e8;
+    background-color: #f0f5f8;
+    color: #5a7a8a;
+    border: 1px solid #d4e2ea;
 }
 
 .flash-warning {
-    background-color: #faf6ea;
-    color: #8b6d3a;
-    border: 1px solid #ebe0c0;
+    background-color: #f8f9f0;
+    color: #7a8a5a;
+    border: 1px solid #e0e8d0;
 }
 
 /* =============================================
-   十八、响应式：移动端适配
+   十九、响应式：移动端适配
    ============================================= */
 @media (max-width: 768px) {
     .main-layout {
@@ -939,11 +1775,77 @@ img {
         overflow-x: auto;
     }
 
-    .auth-container {
-        margin: var(--space-lg) var(--space-md);
+    /* 移动端：登录页左右分栏改为上下堆叠 */
+    .auth-split {
+        flex-direction: column;
+    }
+
+    /* 左侧媒体区降低高度，给表单腾空间 */
+    .auth-media-side {
+        min-height: 35vh;
+        min-width: unset;
+    }
+
+    /* 大标题缩小字号 */
+    .auth-media-title {
+        font-size: 2rem;
+    }
+
+    /* 右侧表单区取消最小宽度限制 */
+    .auth-form-side {
+        min-width: unset;
+        padding: var(--space-lg);
+    }
+
+    /* 注册页居中布局保持，增加内边距 */
+    .auth-centered {
+        padding: var(--space-lg) var(--space-md);
+    }
+
+    /* ── 文章列表：移动端单列 ── */
+    .post-list {
+        grid-template-columns: 1fr;
+    }
+
+    /* 大卡片在移动端恢复正常样式 */
+    .post-card-hero {
+        grid-column: auto;
+        padding: var(--space-md);
+    }
+    .post-card-hero .post-title {
+        font-size: 1.2rem !important;
     }
 
     .post-card {
         padding: var(--space-md);
+    }
+
+    /* ── Hero 横幅移动端适配 ── */
+    .hero-section {
+        padding: var(--space-lg) var(--space-md);
+    }
+    .hero-avatar {
+        width: 64px;
+        height: 64px;
+    }
+    .hero-nickname {
+        font-size: 1.3rem;
+    }
+    .hero-stats {
+        gap: var(--space-md);
+    }
+    .hero-stat-num {
+        font-size: 1.3rem;
+    }
+
+    /* ── 统计栏移动端 ── */
+    .stats-bar-inner {
+        gap: var(--space-lg);
+    }
+    .stats-bar-num {
+        font-size: 1.5rem;
+    }
+    .stats-bar-divider {
+        height: 36px;
     }
 }

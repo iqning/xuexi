@@ -1,30 +1,103 @@
-{% extends 'base.html' %}
+{% extends 'auth_base.html' %}
 
 <!--
     注册页面模板
-    路由：GET /register → 显示注册表单，POST /register → 提交注册
+    布局：表单居中，毛玻璃效果与花海背景融合
 -->
 
-{% block title %}注册 - 我的博客{% endblock %}
+{% block title %}注册 - {{ site_name }}{% endblock %}
+
+<!-- 注册页专属：毛玻璃表单，融入花海背景 -->
+{% block head %}
+<style>
+    /* ── 表单卡片：完全透明，无任何样式，融入图片 ── */
+    .auth-centered .auth-form-wrapper {
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    /* ── 标题：白色 + 投影 ── */
+    .auth-centered .auth-form-wrapper h2 {
+        color: #fff;
+        text-shadow: 0 2px 12px rgba(0, 40, 80, 0.40);
+    }
+
+    /* ── 标签：白色 ── */
+    .auth-centered .form-group label {
+        color: #fff;
+        text-shadow: 0 1px 6px rgba(0, 30, 60, 0.35);
+    }
+
+    /* ── 输入框：实白底，清晰可见 ── */
+    .auth-centered .form-group input[type="text"],
+    .auth-centered .form-group input[type="password"] {
+        background: rgba(255, 255, 255, 0.55) !important;
+        border: 1px solid rgba(255, 255, 255, 0.50) !important;
+        color: #1a3a5c;
+        transition: all 0.25s;
+    }
+    .auth-centered .form-group input::placeholder {
+        color: rgba(80, 110, 140, 0.60);
+    }
+    .auth-centered .form-group input[type="text"]:focus,
+    .auth-centered .form-group input[type="password"]:focus {
+        background: rgba(255, 255, 255, 0.75) !important;
+        border-color: rgba(255, 255, 255, 0.70) !important;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25) !important;
+        outline: none;
+    }
+
+    /* ── 按钮：半透白底，融入图片 ── */
+    .auth-centered .btn-primary {
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.50);
+        color: #3898d0;
+        font-weight: 600;
+        letter-spacing: 1px;
+        transition: all 0.25s;
+    }
+    .auth-centered .btn-primary:hover {
+        background: #fff;
+        color: #2890d0;
+        border-color: #5aacdf;
+        box-shadow: 0 4px 16px rgba(0, 80, 160, 0.15);
+    }
+
+    /* ── 跳转链接：白色 + 下划线 ── */
+    .auth-centered .auth-switch {
+        color: rgba(255, 255, 255, 0.80);
+        text-shadow: 0 1px 4px rgba(0, 30, 60, 0.20);
+    }
+    .auth-centered .auth-switch a {
+        color: #fff;
+        font-weight: 600;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+    .auth-centered .auth-switch a:hover {
+        color: rgba(255, 255, 255, 0.85);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-    <div class="auth-container">
-        <h1>注册新账号</h1>
+<div class="auth-centered" style="background: url('{{ url_for('static', filename='picture/huahai.jpg') }}') center/cover;">
+    <div class="auth-form-wrapper">
+        <h2>注册新账号</h2>
 
         <!--
             注册表单
-            method="POST"：注册信息通过请求体传输，不在 URL 上暴露密码
+            method="POST"：注册信息通过请求体传输
             action 为空：提交到当前 URL，即 /register
         -->
         <form method="POST" action="" class="auth-form">
             <!-- 用户名 -->
             <div class="form-group">
                 <label for="username">用户名 *</label>
-                <!--
-                    name="username"：后端通过 request.form['username'] 获取
-                    minlength="2" maxlength="50"：限制长度，匹配数据库 VARCHAR(50)
-                    autocomplete="username"：浏览器提示保存用户名
-                -->
                 <input type="text" id="username" name="username" required
                        minlength="2" maxlength="50"
                        autocomplete="username" autofocus
@@ -34,10 +107,6 @@
             <!-- 昵称 -->
             <div class="form-group">
                 <label for="nickname">昵称</label>
-                <!--
-                    昵称选填，用于文章作者显示和评论署名。
-                    不填的话后端可用用户名作为默认昵称
-                -->
                 <input type="text" id="nickname" name="nickname"
                        maxlength="50"
                        placeholder="取个好听的名字吧（选填）">
@@ -46,12 +115,6 @@
             <!-- 密码 -->
             <div class="form-group">
                 <label for="password">密码 *</label>
-                <!--
-                    type="password"：输入显示为圆点
-                    minlength="6"：密码最小长度要求
-                    autocomplete="new-password"：告诉浏览器这是"设置新密码"，
-                    部分浏览器会提示生成强密码
-                -->
                 <input type="password" id="password" name="password" required
                        minlength="6"
                        autocomplete="new-password"
@@ -61,10 +124,6 @@
             <!-- 确认密码 -->
             <div class="form-group">
                 <label for="password_confirm">确认密码 *</label>
-                <!--
-                    两次输入密码，后端比对是否一致，防止用户输错。
-                    浏览器层面无法做这个校验，需要后端处理
-                -->
                 <input type="password" id="password_confirm" name="password_confirm" required
                        minlength="6"
                        autocomplete="new-password"
@@ -80,4 +139,5 @@
             已有账号？<a href="{{ url_for('login') }}">立即登录</a>
         </p>
     </div>
+</div>
 {% endblock %}

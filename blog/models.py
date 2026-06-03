@@ -33,8 +33,11 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     nickname = db.Column(db.String(50), default='')
-    bio = db.Column(db.String(200), default='')
+    bio = db.Column(db.String(210), default='')
     avatar = db.Column(db.String(255), default='default.png')
+    # 网易云音乐外链播放器：存歌曲 ID（数字），为空表示不显示播放器
+    # 例如歌曲 https://music.163.com/#/song?id=123456 → 存 "123456"
+    music_id = db.Column(db.String(30), default='')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # ---- 关联关系 ----

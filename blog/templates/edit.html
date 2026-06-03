@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+<!--
+    编辑文章页面模板
+    路由：GET /post/<id>/edit → 显示预填充的编辑表单
+          POST /post/<id>/edit → 提交更新
+    只有文章作者本人才能访问（app.py 中做了权限校验）
+-->
+
+{% block title %}编辑文章 - {{ site_name }}{% endblock %}
+
+<!--
+    在 <head> 中引入 Quill 富文本编辑器的 CSS
+    和 admin.html 用同一个主题，保持一致
+-->
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="admin-container">
+
+        <!-- ========== 编辑文章表单 ========== -->
+        <section class="admin-section">
+            <h2>编辑文章</h2>
+            <!--
+                action 指向当前路由 /post/<id>/edit
+                POST 请求由 app.py 中 edit_article 函数的 POST 分支处理
+            -->
+            <form method="POST" action="" class="admin-form" id="edit-form">
+                <!-- 文章标题：预填原标题 -->
+                <div class="form-group">
+                    <label for="title">文章标题 *</label>
+                    <input type="text" id="title" name="title" required
+                           maxlength="200"
+                           value="{{ article.title }}"
+                           placeholder="请输入文章标题">
+                </div>
+
+                <!--
+                    所属分类：下拉选择框
+                    用内联表达式预选中文章当前所属的分类
+                -->
+                <div class="form-group">
+                    <label for="category_id">分类</label>
+                    <select id="category_id" name="category_id">
+                        <option value="">不分类</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {{ 'selected' if article.category_id == cat.id else '' }}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- 文章摘要：预填原摘要 -->
+                <div class="form-group">
+                    <label for="summary">摘要</label>
+                    <textarea id="summary" name="summary" rows="3"
+                              maxlength="500"
+                              placeholder="简要描述文章内容（显示在首页列表）">{{ article.summary }}</textarea>
+                </div>
+
+                <!-- 文章正文：Quill 富文本编辑器，用 JS 预填原内容 -->
+                <div class="form-group">
+                    <label for="content">正文 *</label>
+                    <div id="editor-container"></div>
+                    <input type="hidden" name="content" id="content">
+                </div>
+
+                <!--
+                    操作按钮组：
+                    - 保存修改：提交表单
+                    - 取消：返回文章详情页
+                -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">保存修改</button>
+                    <a href="{{ url_for('post', id=article.id) }}" class="btn btn-secondary">取消</a>
+                </div>
+            </form>
+        </section>
+    </div>
+{% endblock %}
+
+<!--
+    在页面底部加载 Quill 的 JavaScript 并初始化编辑器
+    和 admin.html 的配置一致，但多了预填充内容的步骤
+-->
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script>
+    /*
+     * 初始化 Quill 富文本编辑器
+     * 工具栏配置和 admin.html 完全一致，保证编辑体验统一
+     */
+    const quill = new Quill('#editor-container', {
+        theme: 'snow',
+        placeholder: '请输入文章正文...',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                ['blockquote', 'code-block'],
+                ['link', 'image'],
+                ['clean']
+            ]
+        }
+    });
+
+    /*
+     * 把工具栏移到编辑区下方
+     * 和 admin.html 保持一致的布局
+     */
+    const toolbar = document.querySelector('.ql-toolbar');
+    const editor = document.querySelector('.ql-container');
+    if (toolbar && editor) {
+        editor.after(toolbar);
+    }
+
+    /*
+     * ★ 预填充：把文章原有的 HTML 内容加载到编辑器中
+     *   article.content 是后端传来的文章正文（HTML 格式）
+     *   | tojson 过滤器：Jinja2 会把字符串转成安全的 JSON 字符串，
+     *   包括转义引号、换行符等，防止 JS 语法错误
+     *   quill.root.innerHTML：直接设置编辑器的 HTML 内容
+     */
+    const existingContent = {{ article.content | tojson }};
+    quill.root.innerHTML = existingContent;
+
+    /*
+     * 表单提交前：把 Quill 编辑器的 HTML 内容同步到隐藏字段
+     * 这样后端的 request.form.get('content') 就能正常获取富文本内容
+     */
+    document.getElementById('edit-form').addEventListener('submit', function() {
+        document.getElementById('content').value = quill.root.innerHTML;
+    });
+</script>
+{% endblock %}
