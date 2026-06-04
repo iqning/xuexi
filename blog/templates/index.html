@@ -18,94 +18,112 @@
     {% endif %}
 {% endblock %}
 
+<!-- ========== Header 副标题（仅首页全屏模式可见） ========== -->
+{% block subtitle %}
+    {% if current_user.is_authenticated and current_user.bio %}
+        {{ current_user.bio }}
+    {% else %}
+        记录学习与生活的点滴
+    {% endif %}
+{% endblock %}
+
+<!-- ========== Header Banner 页面标题（非首页时显示） ========== -->
+{% block page_title %}
+    {% if current_category %}
+        {{ current_category.name }}
+    {% elif my_posts %}
+        我的文章
+    {% else %}
+        {{ site_name }}
+    {% endif %}
+{% endblock %}
+
 <!-- ========== 主内容区 ========== -->
 {% block content %}
-    <!-- ====== Hero 横幅区域：仅首页显示，展示博主信息和统计 ====== -->
-    {% if not current_category and not my_posts and stats %}
-    <section class="hero-section">
-        <div class="hero-inner">
-            <!-- 博主头像 -->
-            <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}"
-                 alt="头像" class="hero-avatar">
-            <!-- 博主昵称 -->
-            <h1 class="hero-nickname">{{ current_user.nickname or current_user.username }}</h1>
-            <!-- 个人简介 -->
-            {% if current_user.bio %}
-            <p class="hero-bio">{{ current_user.bio }}</p>
-            {% endif %}
-            <!-- 统计数据行 -->
-            <div class="hero-stats">
-                <div class="hero-stat-item">
-                    <span class="hero-stat-num">{{ stats.article_count }}</span>
-                    <span class="hero-stat-label">篇文章</span>
-                </div>
-                <div class="hero-stat-divider"></div>
-                <div class="hero-stat-item">
-                    <span class="hero-stat-num">{{ stats.category_count }}</span>
-                    <span class="hero-stat-label">个分类</span>
-                </div>
-                <div class="hero-stat-divider"></div>
-                <div class="hero-stat-item">
-                    <span class="hero-stat-num">{{ stats.comment_count }}</span>
-                    <span class="hero-stat-label">条评论</span>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- ====== Hero 已迁移到 base.html 的 #page-header 中，此处不再重复 ====== -->
 
-    <!-- ====== 波浪分割线：Hero 和文章列表之间的过渡 ====== -->
-    <div class="hero-wave">
-        <svg viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0,30 C200,0 400,60 600,30 C800,0 1000,60 1200,30 L1200,60 L0,60 Z"
-                  fill="currentColor" />
-        </svg>
-    </div>
-    {% endif %}
-
-    <!-- 页面头部：根据当前场景显示不同的标题 -->
+    <!--
+        页面头部工具栏：
+        - 左侧：搜索框（始终显示，方便在所有列表页搜索）
+        - 右侧：场景标题（分类名/我的文章）或 "+" 发布按钮
+        搜索框预填 search_query 变量（搜索页回填关键词）
+    -->
     <div class="page-header">
-        <h1>
+        <!-- 搜索框：左对齐，占据剩余空间 -->
+        <form action="{{ url_for('search') }}" method="GET" class="content-search-form">
+            <input type="text" name="q" class="content-search-input"
+                   placeholder="搜索文章..."
+                   value="{{ search_query or '' }}"
+                   autocomplete="off"
+                   maxlength="100">
+            <button type="submit" class="content-search-btn"
+                    title="搜索">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+
+        <!-- 右侧操作区：标题文字 或 发布按钮 -->
+        <div class="page-header-actions">
             {% if current_category %}
-                分类：{{ current_category.name }}
+            <span class="page-header-label">分类：{{ current_category.name }}</span>
             {% elif my_posts %}
-                我的文章
-            {% else %}
-                最新文章
+            <span class="page-header-label">我的文章</span>
+            {% elif page_title and not current_category and not my_posts %}
+            <span class="page-header-label">{{ page_title }}</span>
             {% endif %}
-        </h1>
-        <!-- 首页才显示 "+" 按钮：已登录用户点击跳转到后台发布文章 -->
-        {% if not current_category and not my_posts and current_user.is_authenticated %}
-            <a href="{{ url_for('admin') }}" class="btn-add-post" title="发布新文章">+</a>
-        {% endif %}
+            {% if not current_category and not my_posts and current_user.is_authenticated %}
+                <a href="{{ url_for('admin') }}" class="btn-add-post" title="发布新文章">+</a>
+            {% endif %}
+        </div>
     </div>
 
-    <!-- 文章列表 -->
+    <!-- 文章列表：横向卡片布局，左侧信息 + 右侧封面图 -->
     {% if posts %}
-        <div class="post-list">
+        <div class="post-list-new">
             {% for post in posts %}
-            <!-- loop.first：第一篇用大卡片样式，其余普通卡片 -->
-            <article class="post-card{% if loop.first %} post-card-hero{% endif %}">
-                <!-- 文章标题，点击跳转到详情页 -->
-                <h2 class="post-title">
-                    <a href="{{ url_for('post', id=post.id) }}">{{ post.title }}</a>
-                </h2>
-
-                <!-- 文章元信息：作者、发布时间、分类 -->
-                <div class="post-meta">
-                    <span class="meta-item">👤 {{ post.author.nickname or post.author.username }}</span>
-                    <span class="meta-item">📅 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
-                    {% if post.category %}
-                    <span class="meta-item">
-                        📁 <a href="{{ url_for('category', id=post.category.id) }}">{{ post.category.name }}</a>
-                    </span>
-                    {% endif %}
+            <article class="recent-post-item">
+                <!-- 封面图：有真实封面时显示图片，没有则显示渐变色块 -->
+                <div class="post_cover right">
+                    <a href="{{ url_for('post', id=post.id) }}" title="{{ post.title }}">
+                        {% if post.cover_image %}
+                        <img class="post-bg" src="{{ url_for('static', filename='covers/' + post.cover_image) }}"
+                             alt="{{ post.title }}">
+                        {% else %}
+                        <div class="post-bg-placeholder"></div>
+                        {% endif %}
+                    </a>
                 </div>
-
-                <!-- 文章摘要：显示在列表中，吸引读者点击 -->
-                <p class="post-summary">{{ post.summary }}</p>
-
-                <!-- 阅读全文链接 -->
-                <a href="{{ url_for('post', id=post.id) }}" class="read-more">阅读全文 →</a>
+                <!-- 文章信息区 -->
+                <div class="recent-post-info">
+                    <!-- 标题，点击跳转到详情页 -->
+                    <a class="article-title" href="{{ url_for('post', id=post.id) }}" title="{{ post.title }}">
+                        {% if post.is_pinned %}<span class="pinned-badge">📌 置顶</span>{% endif %}
+                        {{ post.title }}
+                    </a>
+                    <!-- 文章元信息：日期 | 分类 -->
+                    <div class="article-meta-wrap">
+                        <span class="post-meta-date">
+                            <i class="far fa-calendar-alt"></i>
+                            <span class="article-meta-label">发表于</span>
+                            <time datetime="{{ post.created_at.strftime('%Y-%m-%d') }}"
+                                  title="发表于 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}">
+                                {{ post.created_at.strftime('%Y-%m-%d') }}
+                            </time>
+                        </span>
+                        {% if post.category %}
+                        <span class="article-meta">
+                            <span class="article-meta-separator">|</span>
+                            <i class="fas fa-inbox"></i>
+                            <a class="article-meta__categories"
+                               href="{{ url_for('category', id=post.category.id) }}">
+                                {{ post.category.name }}
+                            </a>
+                        </span>
+                        {% endif %}
+                    </div>
+                    <!-- 文章摘要：显示在列表中，吸引读者点击 -->
+                    <div class="content">{{ post.summary }}</div>
+                </div>
             </article>
             {% endfor %}
         </div>
@@ -141,28 +159,78 @@
         </div>
     {% endif %}
 
-    <!-- ====== 底部统计栏：仅首页显示 ====== -->
-    {% if not current_category and not my_posts and stats %}
-    <div class="stats-bar">
-        <div class="stats-bar-inner">
-            <div class="stats-bar-item">
-                <div class="stats-bar-icon">📝</div>
-                <div class="stats-bar-num">{{ stats.article_count }}</div>
-                <div class="stats-bar-label">文章</div>
-            </div>
-            <div class="stats-bar-divider"></div>
-            <div class="stats-bar-item">
-                <div class="stats-bar-icon">📂</div>
-                <div class="stats-bar-num">{{ stats.category_count }}</div>
-                <div class="stats-bar-label">分类</div>
-            </div>
-            <div class="stats-bar-divider"></div>
-            <div class="stats-bar-item">
-                <div class="stats-bar-icon">💬</div>
-                <div class="stats-bar-num">{{ stats.comment_count }}</div>
-                <div class="stats-bar-label">评论</div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    /*
+     * 分页 AJAX 加载脚本
+     * 拦截分页链接点击 → fetch 获取文章列表 HTML 片段 → 替换 DOM → 更新 URL
+     */
+    (function() {
+        var contentArea = document.querySelector('.content-area');
+        if (!contentArea) return;
+
+        // 1. 事件委托：拦截分页链接的点击
+        contentArea.addEventListener('click', function(e) {
+            var link = e.target.closest('.pagination a');
+            if (!link) return;
+
+            e.preventDefault();
+            var url = link.getAttribute('href');
+            // 追加 partial=1 参数，告诉后端只返回列表 HTML 片段
+            var separator = url.indexOf('?') === -1 ? '?' : '&';
+            var fetchUrl = url + separator + 'partial=1';
+
+            // 加载中：降低当前列表透明度
+            var postList = contentArea.querySelector('.post-list-new');
+            var pagEl = contentArea.querySelector('.pagination');
+            if (postList) postList.style.opacity = '0.5';
+            if (pagEl) pagEl.style.opacity = '0.5';
+
+            fetch(fetchUrl, { headers: { 'Accept': 'text/html' } })
+            .then(function(resp) { return resp.text(); })
+            .then(function(html) {
+                // 移除旧列表和分页
+                var oldList = contentArea.querySelector('.post-list-new');
+                var oldPag = contentArea.querySelector('.pagination');
+                var oldEmpty = contentArea.querySelector('.empty-state');
+                if (oldList) oldList.remove();
+                if (oldPag) oldPag.remove();
+                if (oldEmpty) oldEmpty.remove();
+
+                // 插入新内容（紧接 page-header 之后）
+                var pageHeader = contentArea.querySelector('.page-header');
+                if (pageHeader) {
+                    pageHeader.insertAdjacentHTML('afterend', html);
+                } else {
+                    contentArea.insertAdjacentHTML('afterbegin', html);
+                }
+
+                // 新列表淡入动画
+                var newList = contentArea.querySelector('.post-list-new');
+                if (newList) {
+                    newList.style.opacity = '0';
+                    newList.style.transition = 'opacity 0.3s';
+                    requestAnimationFrame(function() {
+                        newList.style.opacity = '1';
+                    });
+                }
+
+                // 更新浏览器 URL
+                history.pushState({}, '', url);
+                contentArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            })
+            .catch(function(err) {
+                console.error('分页加载失败:', err);
+                window.location.href = url;
+            });
+        });
+
+        // 2. 浏览器前进/后退 → 刷新页面
+        window.addEventListener('popstate', function() {
+            window.location.href = window.location.href;
+        });
+    })();
+</script>
 {% endblock %}

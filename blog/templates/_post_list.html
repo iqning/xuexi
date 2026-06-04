@@ -1,0 +1,102 @@
+{#- 文章列表局部模板：用于 AJAX 分页/导航，包含页面标题 + 列表 + 分页 -#}
+
+<!--
+    页面头部工具栏（与 index.html 保持一致）：
+    - 左侧：搜索框
+    - 右侧：页面标题 或 "+" 发布按钮
+-->
+<div class="page-header">
+    <form action="{{ url_for('search') }}" method="GET" class="content-search-form">
+        <input type="text" name="q" class="content-search-input"
+               placeholder="搜索文章..."
+               value="{{ search_query or '' }}"
+               autocomplete="off"
+               maxlength="100">
+        <button type="submit" class="content-search-btn"
+                title="搜索">
+            <i class="fas fa-search"></i>
+        </button>
+    </form>
+
+    <div class="page-header-actions">
+        {% if page_title %}
+        <span class="page-header-label">{{ page_title }}</span>
+        {% endif %}
+        {% if not current_category and not my_posts and current_user.is_authenticated %}
+            <a href="{{ url_for('admin') }}" class="btn-add-post" title="发布新文章">+</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 文章列表：横向卡片布局，左侧信息 + 右侧封面图 -->
+{% if posts %}
+    <div class="post-list-new">
+        {% for post in posts %}
+        <article class="recent-post-item">
+            <!-- 封面图：有真实封面时显示图片，没有则显示渐变色块 -->
+            <div class="post_cover right">
+                <a href="{{ url_for('post', id=post.id) }}" title="{{ post.title }}">
+                    {% if post.cover_image %}
+                    <img class="post-bg" src="{{ url_for('static', filename='covers/' + post.cover_image) }}"
+                         alt="{{ post.title }}">
+                    {% else %}
+                    <div class="post-bg-placeholder"></div>
+                    {% endif %}
+                </a>
+            </div>
+            <!-- 文章信息区 -->
+            <div class="recent-post-info">
+                <!-- 标题 -->
+                <a class="article-title" href="{{ url_for('post', id=post.id) }}" title="{{ post.title }}">
+                    {% if post.is_pinned %}<span class="pinned-badge">📌 置顶</span>{% endif %}
+                    {{ post.title }}
+                </a>
+                <!-- 元信息行：日期 | 分类 -->
+                <div class="article-meta-wrap">
+                    <span class="post-meta-date">
+                        <i class="far fa-calendar-alt"></i>
+                        <span class="article-meta-label">发表于</span>
+                        <time datetime="{{ post.created_at.strftime('%Y-%m-%d') }}"
+                              title="发表于 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}">
+                            {{ post.created_at.strftime('%Y-%m-%d') }}
+                        </time>
+                    </span>
+                    {% if post.category %}
+                    <span class="article-meta">
+                        <span class="article-meta-separator">|</span>
+                        <i class="fas fa-inbox"></i>
+                        <a class="article-meta__categories"
+                           href="{{ url_for('category', id=post.category.id) }}">
+                            {{ post.category.name }}
+                        </a>
+                    </span>
+                    {% endif %}
+                </div>
+                <!-- 文章摘要 -->
+                <div class="content">{{ post.summary }}</div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <!-- 分页导航 -->
+    <div class="pagination">
+        {% if pagination.has_prev %}
+            <a href="{{ url_for(request.endpoint, page=pagination.prev_num, **request.view_args) }}" class="page-prev">
+                ← 上一页
+            </a>
+        {% endif %}
+        <span class="page-info">
+            第 {{ pagination.page }} 页 / 共 {{ pagination.pages }} 页
+        </span>
+        {% if pagination.has_next %}
+            <a href="{{ url_for(request.endpoint, page=pagination.next_num, **request.view_args) }}" class="page-next">
+                下一页 →
+            </a>
+        {% endif %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <p>还没有文章，去<a href="{{ url_for('admin') }}">后台</a>写一篇吧！</p>
+    </div>
+{% endif %}

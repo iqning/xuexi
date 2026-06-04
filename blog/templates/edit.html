@@ -8,6 +8,7 @@
 -->
 
 {% block title %}编辑文章 - {{ site_name }}{% endblock %}
+{% block page_title %}编辑文章{% endblock %}
 
 <!--
     在 <head> 中引入 Quill 富文本编辑器的 CSS
@@ -27,7 +28,10 @@
                 action 指向当前路由 /post/<id>/edit
                 POST 请求由 app.py 中 edit_article 函数的 POST 分支处理
             -->
-            <form method="POST" action="" class="admin-form" id="edit-form">
+            <!-- enctype="multipart/form-data"：文件上传必须 -->
+            <form method="POST" action="" class="admin-form" id="edit-form" enctype="multipart/form-data">
+                <!-- CSRF 保护令牌 -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <!-- 文章标题：预填原标题 -->
                 <div class="form-group">
                     <label for="title">文章标题 *</label>
@@ -59,11 +63,46 @@
                               placeholder="简要描述文章内容（显示在首页列表）">{{ article.summary }}</textarea>
                 </div>
 
+                <!-- 封面图上传：已有封面时显示当前封面缩略图 -->
+                <div class="form-group">
+                    <label for="cover_image">封面图（选填）</label>
+                    {% if article.cover_image %}
+                    <div class="cover-preview">
+                        <img src="{{ url_for('static', filename='covers/' + article.cover_image) }}"
+                             alt="当前封面" class="cover-thumb">
+                        <span class="form-hint">上传新图会替换当前封面</span>
+                    </div>
+                    {% endif %}
+                    <input type="file" id="cover_image" name="cover_image"
+                           accept="image/png, image/jpeg, image/gif"
+                           class="file-input">
+                    <span class="form-hint">支持 PNG / JPG / GIF，留空则保持当前封面不变</span>
+                </div>
+
+                <!-- 标签输入：预填已有标签，逗号分隔 -->
+                <div class="form-group">
+                    <label for="tags">标签（选填）</label>
+                    <input type="text" id="tags" name="tags"
+                           maxlength="200"
+                           value="{{ article.tags | map(attribute='name') | join(', ') }}"
+                           placeholder="用逗号分隔，例如：Python, Flask, 教程">
+                    <span class="form-hint">多个标签用逗号分隔</span>
+                </div>
+
                 <!-- 文章正文：Quill 富文本编辑器，用 JS 预填原内容 -->
                 <div class="form-group">
                     <label for="content">正文 *</label>
                     <div id="editor-container"></div>
                     <input type="hidden" name="content" id="content">
+                </div>
+
+                <!-- 文章状态选择 -->
+                <div class="form-group">
+                    <label for="status">状态</label>
+                    <select id="status" name="status">
+                        <option value="published" {{ 'selected' if article.status == 'published' else '' }}>发布</option>
+                        <option value="draft" {{ 'selected' if article.status == 'draft' else '' }}>草稿（仅自己可见）</option>
+                    </select>
                 </div>
 
                 <!--

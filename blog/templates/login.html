@@ -114,6 +114,8 @@
                 method="POST"：账号密码通过请求体传输，不在 URL 上暴露
             -->
             <form method="POST" action="" class="auth-form">
+                <!-- CSRF 保护令牌：防止跨站请求伪造攻击 -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <!-- 用户名输入 -->
                 <div class="form-group">
@@ -131,6 +133,14 @@
                            placeholder="请输入密码">
                 </div>
 
+                <!-- "记住我"复选框：勾选后登录状态保持 365 天 -->
+                <div class="form-group remember-me">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember" value="1">
+                        <span>记住我（下次自动登录）</span>
+                    </label>
+                </div>
+
                 <!-- 提交按钮 -->
                 <button type="submit" class="btn btn-primary btn-block">登录</button>
             </form>
@@ -138,6 +148,8 @@
             <!-- 跳转到注册页的引导链接 -->
             <p class="auth-switch">
                 还没有账号？<a href="{{ url_for('register') }}">立即注册</a>
+                <br>
+                <a href="{{ url_for('forgot_password') }}" style="font-size:0.85rem;">忘记密码？</a>
             </p>
         </div>
     </div>

@@ -1,0 +1,11 @@
+# =============================================
+#  博客项目依赖清单
+#  安装方式：pip install -r requirements.txt
+# =============================================
+
+flask                    # Web 框架，处理路由、请求、响应
+flask-sqlalchemy         # ORM，用 Python 对象操作数据库
+flask-login              # 用户登录状态管理（session）
+flask-wtf                # CSRF 保护 + 表单处理
+pymysql                  # MySQL 驱动，连接数据库的桥梁
+requests                 # HTTP 请求库，用于网易云音乐搜索 API

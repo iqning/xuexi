@@ -8,6 +8,8 @@
     <title>{% block title %}{{ site_name }}{% endblock %}</title>
     <!-- 引入全局样式 -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- CSRF 令牌：供 JS 读取，用于 fetch 请求头 -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- 子模板可在 head 中插入额外内容 -->
     {% block head %}{% endblock %}
 </head>

@@ -26,6 +26,11 @@ class Config:
     # 可以用 secrets.token_hex(32) 生成一个随机的 64 字符密钥
     SECRET_KEY = 'dev-secret-key-change-in-production-please'
 
+    # ---------- CSRF 保护密钥 ----------
+    # CSRF 令牌的签名密钥，与 SECRET_KEY 分开管理更好
+    # 生产环境同样要用随机字符串替换
+    WTF_CSRF_SECRET_KEY = 'csrf-secret-key-change-in-production'
+
     # ---------- 站点名称 ----------
     # 出现在浏览器标签页标题、导航栏 LOGO、页脚版权等位置
     SITE_NAME = '拾光小筑'
@@ -44,6 +49,8 @@ class Config:
     # ---------- 文件上传配置 ----------
     # 头像上传的目标文件夹（位于 blog/static/uploads/）
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+    # 文章封面图上传的目标文件夹（位于 blog/static/covers/）
+    COVERS_FOLDER = os.path.join(BASE_DIR, 'static', 'covers')
 
     # 允许上传的文件扩展名（白名单，防止上传恶意文件）
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -54,6 +61,10 @@ class Config:
     # ---------- 分页配置 ----------
     # 每页显示的文章数量
     POSTS_PER_PAGE = 6
+
+    # ---------- 密码重置配置 ----------
+    # 重置密码链接的有效期（秒），默认 3600 = 1 小时
+    RESET_TOKEN_EXPIRY = 3600
 
     # ---------- 开发模式 ----------
     # 调试模式：修改代码后自动重启，修改模板后自动重载

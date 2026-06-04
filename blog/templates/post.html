@@ -9,6 +9,9 @@
 <!-- 浏览器标签页标题：使用文章标题 -->
 {% block title %}{{ post.title }} - {{ site_name }}{% endblock %}
 
+<!-- Header Banner 中显示的页面标题 -->
+{% block page_title %}{{ post.title }}{% endblock %}
+
 {% block content %}
     <!-- ========== 文章正文区 ========== -->
     <article class="post-detail">
@@ -35,11 +38,21 @@
                 <a href="{{ url_for('category', id=post.category.id) }}">{{ post.category.name }}</a>
             </span>
             {% endif %}
+            <!-- 阅读量 -->
+            <span>阅读：{{ post.views }} 次</span>
+            <!-- 标签 -->
+            {% if post.tags %}
+            <span class="post-tags">
+                {% for tag in post.tags %}
+                <a href="{{ url_for('tag', id=tag.id) }}" class="tag-pill">{{ tag.name }}</a>
+                {% endfor %}
+            </span>
+            {% endif %}
             <!--
-                编辑链接：只有文章作者才能看到，纯文字无样式
-                紧跟在分类后面，像元信息的一部分
+                编辑链接：只有登录后的文章作者本人才能看到
+                需要先判断 is_authenticated，否则匿名用户的 current_user 没有 id 属性
             -->
-            {% if current_user.id == post.author_id %}
+            {% if current_user.is_authenticated and current_user.id == post.author_id %}
             <span>
                 <a href="{{ url_for('edit_article', id=post.id) }}">编辑</a>
             </span>
@@ -87,15 +100,20 @@
         <!-- ========== 评论表单 ========== -->
         <div class="comment-form">
             <h3>发表评论</h3>
+            {% if current_user.is_authenticated %}
             <!--
+                已登录用户：显示评论表单
                 method="POST"：评论数据通过请求体发送，不会暴露在 URL 上。
                 action 用 url_for 动态生成，指向处理评论提交的路由函数
             -->
             <form method="POST" action="{{ url_for('add_comment', id=post.id) }}">
-                <!-- 昵称输入：required 表示必填，浏览器会阻止空值提交 -->
+                <!-- CSRF 保护令牌 -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <!-- 昵称输入：已登录用户自动填入，不可修改 -->
                 <div class="form-group">
                     <label for="author_name">昵称 *</label>
                     <input type="text" id="author_name" name="author_name" required
+                           value="{{ current_user.nickname or current_user.username }}"
                            placeholder="你的昵称">
                 </div>
 
@@ -116,6 +134,16 @@
                 <!-- 提交按钮：type="submit" 触发表单提交 -->
                 <button type="submit" class="btn btn-primary">提交评论</button>
             </form>
+            {% else %}
+            <!-- 未登录用户：显示登录提示 -->
+            <div class="empty-state">
+                <p>💬 想参与讨论？<a href="{{ url_for('login') }}">登录</a> 后即可发表评论。</p>
+                <p style="font-size:0.85rem; margin-top:4px;">还没有账号？<a href="{{ url_for('register') }}">立即注册</a></p>
+            </div>
+            {% endif %}
         </div>
     </section>
 {% endblock %}
+
+{#- 评论交互已改为事件委托，统一在 base.html 中处理 -#}
+{% block scripts %}{% endblock %}

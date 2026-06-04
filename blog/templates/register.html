@@ -95,6 +95,8 @@
             action 为空：提交到当前 URL，即 /register
         -->
         <form method="POST" action="" class="auth-form">
+            <!-- CSRF 保护令牌：防止跨站请求伪造攻击 -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <!-- 用户名 -->
             <div class="form-group">
                 <label for="username">用户名 *</label>

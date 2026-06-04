@@ -7,6 +7,7 @@
 -->
 
 {% block title %}后台管理 - {{ site_name }}{% endblock %}
+{% block page_title %}后台管理{% endblock %}
 
 <!--
     在 <head> 中引入 Quill 富文本编辑器的 CSS
@@ -26,7 +27,14 @@
                 action 为空：提交到当前 URL /admin
                 POST 请求由路由中的 if request.method == 'POST' 分支处理
             -->
-            <form method="POST" action="" class="admin-form">
+            <!--
+                enctype="multipart/form-data" 是必须的：
+                表单中有文件上传（封面图）时，浏览器需要用这种编码格式
+                把二进制文件数据打包发送给后端，否则文件传不过去
+            -->
+            <form method="POST" action="" class="admin-form" enctype="multipart/form-data">
+                <!-- CSRF 保护令牌：防止跨站请求伪造攻击 -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <!-- 文章标题 -->
                 <div class="form-group">
                     <label for="title">文章标题 *</label>
@@ -68,6 +76,24 @@
                               placeholder="简要描述文章内容（显示在首页列表）"></textarea>
                 </div>
 
+                <!-- 封面图上传：选填，不上传则使用渐变色块占位 -->
+                <div class="form-group">
+                    <label for="cover_image">封面图（选填）</label>
+                    <input type="file" id="cover_image" name="cover_image"
+                           accept="image/png, image/jpeg, image/gif"
+                           class="file-input">
+                    <span class="form-hint">支持 PNG / JPG / GIF，用于首页文章卡片展示</span>
+                </div>
+
+                <!-- 标签输入：逗号分隔的标签名 -->
+                <div class="form-group">
+                    <label for="tags">标签（选填）</label>
+                    <input type="text" id="tags" name="tags"
+                           maxlength="200"
+                           placeholder="用逗号分隔，例如：Python, Flask, 教程">
+                    <span class="form-hint">多个标签用逗号分隔，如已有同名标签会自动关联</span>
+                </div>
+
                 <!-- 文章正文：使用 Quill 富文本编辑器 -->
                 <div class="form-group">
                     <label for="content">正文 *</label>
@@ -79,7 +105,12 @@
                     <input type="hidden" name="content" id="content">
                 </div>
 
-                <button type="submit" class="btn btn-primary">发布文章</button>
+                <div class="form-actions">
+                    <button type="submit" name="action" value="publish"
+                            class="btn btn-primary">发布文章</button>
+                    <button type="submit" name="action" value="draft"
+                            class="btn btn-secondary">保存草稿</button>
+                </div>
             </form>
         </section>
 
@@ -90,13 +121,14 @@
             {% if my_articles %}
                 <!--
                     文章管理列表，使用 <table> 因为需要对齐的列结构：
-                    标题 | 分类 | 发布时间 | 操作
+                    标题 | 分类 | 状态 | 发布时间 | 操作
                 -->
                 <table class="article-table">
                     <thead>
                         <tr>
                             <th>标题</th>
                             <th>分类</th>
+                            <th>状态</th>
                             <th>发布时间</th>
                             <th>操作</th>
                         </tr>
@@ -109,6 +141,13 @@
                                 <a href="{{ url_for('post', id=article.id) }}">{{ article.title }}</a>
                             </td>
                             <td>{{ article.category.name if article.category else '无' }}</td>
+                            <td>
+                                {% if article.status == 'draft' %}
+                                <span class="status-badge status-draft">草稿</span>
+                                {% else %}
+                                <span class="status-badge status-published">已发布</span>
+                                {% endif %}
+                            </td>
                             <td>{{ article.created_at.strftime('%Y-%m-%d') }}</td>
                             <td>
                                 <!--
@@ -117,6 +156,17 @@
                                 -->
                                 <a href="{{ url_for('edit_article', id=article.id) }}" class="btn btn-primary btn-sm">编辑</a>
                                 <!--
+                                    置顶按钮：切换文章置顶状态
+                                    和删除一样用 POST 小表单，防止 CSRF
+                                -->
+                                <form method="POST" action="{{ url_for('pin_article', id=article.id) }}"
+                                      style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm {{ 'btn-pin-active' if article.is_pinned else 'btn-pin' }}">
+                                        {{ '📌 已置顶' if article.is_pinned else '📌 置顶' }}
+                                    </button>
+                                </form>
+                                <!--
                                     删除按钮放在一个独立的小表单里。
                                     用 POST 方法而非 GET 链接：删除操作应该通过 POST 触发，
                                     防止搜索引擎爬虫或浏览器预加载误删
@@ -124,6 +174,7 @@
                                 <form method="POST" action="{{ url_for('delete_article', id=article.id) }}"
                                       style="display:inline;"
                                       onsubmit="return confirm('确定要删除《{{ article.title }}》吗？');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn btn-danger btn-sm">删除</button>
                                 </form>
                             </td>

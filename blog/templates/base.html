@@ -10,41 +10,78 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 图标库：导航栏和页面各处使用 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.0/css/all.min.css">
     <!-- 引入全局样式表：url_for 会生成正确的静态文件路径 -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- CSRF 令牌：JS 通过此 meta 标签读取 token，用于 fetch 请求头 -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- RSS 订阅源自动发现：浏览器/RSS 阅读器通过此标签找到订阅地址 -->
+    <link rel="alternate" type="application/rss+xml"
+          title="{{ site_name }} RSS" href="{{ url_for('feed') }}">
     <!-- 子模板可在 head 中插入额外内容（如页面专属 CSS） -->
     {% block head %}{% endblock %}
 </head>
 <body>
-    <!-- ========== 顶部导航栏 ========== -->
-    <header class="site-header">
-        <div class="container">
-            <!-- 网站 LOGO，点击回到首页 -->
-            <a href="{{ url_for('index') }}" class="site-logo">{{ site_name }}</a>
-            <nav class="site-nav">
-                <!-- current_user 由 Flask-Login 自动注入到所有模板中 -->
-                {% if current_user.is_authenticated %}
-                    <!-- 用户已登录 -->
-                    <!-- 头像 + 用户名，hover 展开下拉菜单 -->
-                    <div class="nav-user-dropdown">
-                        <span class="nav-user">
-                            <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}"
-                                 alt="头像" class="nav-avatar">
-                            {{ current_user.nickname or current_user.username }}
-                            <span class="dropdown-arrow">▾</span>
-                        </span>
-                        <div class="nav-dropdown-menu">
-                            <a href="{{ url_for('profile') }}">个人中心</a>
-                            <a href="{{ url_for('logout') }}">退出登录</a>
-                        </div>
+    <!-- ========== 全屏大图 Header（LinzyBlog 风格） ========== -->
+    <!--
+        full_header 变量由路由控制：
+        - 首页：True  → full_page 类 → 100vh 全屏 + 居中大标题
+        - 其他页：False → not-home-page 类 → 400px 小 Banner
+        no_banner 变量：
+        - 为 True 时 → 去除 Banner 图片和高度，只保留导航栏
+    -->
+    <header class="full_page{% if not full_header %} not-home-page{% endif %}{% if no_banner %} no-banner{% endif %}" id="page-header"
+            {% if not no_banner %}style="background-image: url('{{ url_for('static', filename='picture/huahai.jpg') }}')"{% endif %}>
+
+        <!-- ── 顶部导航栏：绝对定位在 Header 顶部 ── -->
+        <nav id="nav" class="show">
+            <!-- 左侧：站点名称，点击回首页 -->
+            <span id="blog-info">
+                <a class="nav-site-title" href="{{ url_for('index') }}">
+                    <span class="site-name">{{ site_name }}</span>
+                </a>
+            </span>
+
+            <!-- 右侧：菜单项 -->
+            <div id="menus">
+                <div class="menus_items">
+                    {% if not current_user.is_authenticated %}
+                    <!-- 未登录：保留登录 / 注册入口 -->
+                    <div class="menus_item">
+                        <a class="site-page" href="{{ url_for('login') }}">
+                            <i class="fa-fw fas fa-sign-in-alt"></i><span> 登录</span>
+                        </a>
                     </div>
-                {% else %}
-                    <!-- 用户未登录：显示登录和注册入口 -->
-                    <a href="{{ url_for('login') }}">登录</a>
-                    <a href="{{ url_for('register') }}">注册</a>
-                {% endif %}
-            </nav>
+                    <div class="menus_item">
+                        <a class="site-page" href="{{ url_for('register') }}">
+                            <i class="fa-fw fas fa-user-plus"></i><span> 注册</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+
+        {% if not no_banner %}
+        {% if full_header %}
+        <!-- ── 首页：副标题（仅全屏模式显示） ── -->
+        <div id="site-info">
+            <div id="site-subtitle">
+                <span id="subtitle">{% block subtitle %}记录学习与生活的点滴{% endblock %}</span>
+            </div>
         </div>
+        <!-- ── 向下滚动指示器 ── -->
+        <div id="scroll-down">
+            <i class="fas fa-angle-down scroll-down-effects"></i>
+        </div>
+        {% else %}
+        <!-- ── 非首页：小号页面标题 ── -->
+        <div id="page-site-info">
+            <h1 id="site-title">{% block page_title %}{{ site_name }}{% endblock %}</h1>
+        </div>
+        {% endif %}
+        {% endif %}
     </header>
 
     <!-- ========== Flash 闪现消息 ========== -->
@@ -84,18 +121,39 @@
     <main class="site-main">
         <div class="container main-layout">
             <!-- 左侧侧边栏 -->
-            <aside class="sidebar">
+            <!-- 移动端侧边栏切换按钮（桌面端隐藏） -->
+            <button type="button" class="btn-sidebar-toggle" id="btn-sidebar-toggle">
+                ☰ 侧边栏菜单
+            </button>
+            <aside class="sidebar" id="sidebar">
                 {% block sidebar %}
                 <!-- ====== 个人信息卡片 ====== -->
                 {% if current_user.is_authenticated %}
                 <div class="profile-card">
-                    <!-- 头像 -->
-                    <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}"
-                         alt="头像" class="avatar">
+                    <!-- 头像：点击进入个人中心 -->
+                    <a href="{{ url_for('profile') }}" title="个人中心">
+                        <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}"
+                             alt="头像" class="avatar">
+                    </a>
                     <!-- 昵称（昵称优先，没有就显示用户名） -->
                     <div class="nickname">{{ current_user.nickname or current_user.username }}</div>
                     <!-- 个人简介 -->
                     <div class="bio">{{ current_user.bio or '这个人很懒，什么都没写...' }}</div>
+                    <!-- 站点统计数据 -->
+                    <div class="profile-stats">
+                        <div class="profile-stat-item">
+                            <span class="profile-stat-num">{{ stats.article_count }}</span>
+                            <span class="profile-stat-label">文章</span>
+                        </div>
+                        <div class="profile-stat-item">
+                            <span class="profile-stat-num">{{ stats.category_count }}</span>
+                            <span class="profile-stat-label">分类</span>
+                        </div>
+                        <div class="profile-stat-item">
+                            <span class="profile-stat-num">{{ stats.comment_count }}</span>
+                            <span class="profile-stat-label">评论</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ====== 音乐播放器卡片 ====== -->
@@ -108,7 +166,7 @@
                         <!-- 搜索结果下拉列表（初始隐藏，搜索时动态显示） -->
                         <div class="music-search-results" style="display:none;"></div>
                     </div>
-                    <!-- 播放器区域：有歌曲ID时显示iframe，没有时隐藏 -->
+                    <!-- 播放器区域：始终显示，有歌曲ID时加载iframe，没有时显示占位提示 -->
                     {% if current_user.music_id %}
                     <div class="music-player" id="music-player">
                         <iframe frameborder="no" border="0" marginwidth="0" marginheight="0"
@@ -117,12 +175,55 @@
                         </iframe>
                     </div>
                     {% else %}
-                    <div class="music-player" id="music-player" style="display:none;"></div>
+                    <div class="music-player music-player-empty" id="music-player">
+                        搜索歌曲即可播放 🎵
+                    </div>
                     {% endif %}
                 </div>
                 {% endif %}
 
+                <!-- ====== 最新文章小部件 ====== -->
+                <!--
+                    展示最近发布文章的缩略卡片：封面图 + 标题 + 发布时间
+                    数据由 app.py 的 inject_globals 上下文处理器统一提供
+                    样式用 .recent-post-sidebar-* 系列 class 控制
+                -->
+                <div class="widget widget-recent-posts">
+                    <h3>最新文章</h3>
+                    <ul class="recent-post-sidebar-list">
+                        {% for post in sidebar_recent_posts %}
+                        <li class="recent-post-sidebar-item">
+                            <a href="{{ url_for('post', id=post.id) }}"
+                               class="recent-post-sidebar-link"
+                               title="{{ post.title }}">
+                                <!-- 封面缩略图：有真实封面显示图片，没有则显示渐变色块 -->
+                                <div class="recent-post-sidebar-cover">
+                                    {% if post.cover_image %}
+                                    <img src="{{ url_for('static', filename='covers/' + post.cover_image) }}"
+                                         alt="{{ post.title }}">
+                                    {% else %}
+                                    <div class="recent-post-sidebar-cover-placeholder"></div>
+                                    {% endif %}
+                                </div>
+                                <!-- 右侧信息：标题 + 发布时间 -->
+                                <div class="recent-post-sidebar-info">
+                                    <span class="recent-post-sidebar-title">{{ post.title }}</span>
+                                    <span class="recent-post-sidebar-time">
+                                        {{ post.created_at.strftime('%Y-%m-%d') }}
+                                    </span>
+                                </div>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
                 <!-- ====== 分类列表 ====== -->
+                <!--
+                    用 sidebar_categories block 包裹，子模板（如 profile.html）
+                    可以覆盖此 block 为空来隐藏分类列表
+                -->
+                {% block sidebar_categories %}
                 <div class="widget">
                     <h3>文章分类</h3>
 
@@ -167,6 +268,52 @@
                     {% endif %}
                 </div>
                 {% endblock %}
+
+                <!-- ====== 网站信息小部件 ====== -->
+                <!--
+                    展示站点运行数据：文章数、访客数（不蒜子）、总浏览量（不蒜子）、最后更新时间
+                    不蒜子通过 data-* 属性 + JS 脚本动态获取统计数字
+                    最后更新时间通过 JS 计算相对时间（如"2 个月前"）
+                -->
+                <div class="widget widget-webinfo">
+                    <h3><i class="fas fa-chart-line"></i> 网站信息</h3>
+                    <div class="webinfo">
+                        <!-- 文章数目：来自后端 stats.article_count -->
+                        <div class="webinfo-item">
+                            <div class="item-name">文章数目 :</div>
+                            <div class="item-count">{{ stats.article_count }}</div>
+                        </div>
+                        <!-- 本站访客数：不蒜子自动填充 -->
+                        <div class="webinfo-item">
+                            <div class="item-name">本站访客数 :</div>
+                            <div class="item-count" id="busuanzi_value_site_uv">
+                                <span class="loading-dot">--</span>
+                            </div>
+                        </div>
+                        <!-- 本站总浏览量：不蒜子自动填充 -->
+                        <div class="webinfo-item">
+                            <div class="item-name">本站总浏览量 :</div>
+                            <div class="item-count" id="busuanzi_value_site_pv">
+                                <span class="loading-dot">--</span>
+                            </div>
+                        </div>
+                        <!-- 最后更新时间：取最新文章的更新时间，JS 计算相对时间 -->
+                        <div class="webinfo-item">
+                            <div class="item-name">最后更新时间 :</div>
+                            <div class="item-count" id="last-push-date"
+                                 {% if last_update_time %}
+                                 data-lastpushdate="{{ last_update_time.updated_at.strftime('%Y-%m-%dT%H:%M:%S') }}Z"
+                                 {% endif %}>
+                                {% if last_update_time %}
+                                {{ last_update_time.updated_at.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                --
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endblock %}
             </aside>
 
             <!-- 右侧内容区：子模板通过重写 content block 来填充 -->
@@ -194,6 +341,8 @@
             <h3>编辑分类</h3>
             <!-- action 由 JS 动态设置，指向 /admin/category/edit/<id> -->
             <form id="edit-cat-form" method="POST" action="">
+                <!-- CSRF 保护令牌 -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label for="edit-cat-name">分类名称</label>
                     <input type="text" id="edit-cat-name" name="name"
@@ -215,11 +364,46 @@
         </div>
     </div>
 
+    <!-- ====== 移动端侧边栏切换脚本 ====== -->
+    <script>
+        /*
+         * 移动端侧边栏切换：点击按钮展开/收起侧边栏
+         * 仅在移动端生效（按钮在桌面端被 CSS 隐藏）
+         */
+        (function() {
+            var toggleBtn = document.getElementById('btn-sidebar-toggle');
+            var sidebar = document.getElementById('sidebar');
+            if (!toggleBtn || !sidebar) return;
+
+            toggleBtn.addEventListener('click', function() {
+                // 切换 sidebar 的 open 类
+                if (sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                    toggleBtn.innerHTML = '☰ 侧边栏菜单';
+                } else {
+                    sidebar.classList.add('open');
+                    toggleBtn.innerHTML = '✕ 收起侧边栏';
+                }
+            });
+        })();
+    </script>
+
     <!--
         分类管理 JavaScript（侧边栏 + / 编辑 / 删除）
         放在 scripts block 之前，确保所有页面都能用到
     -->
     <script>
+        /*
+         * 0. 辅助函数：从 <meta> 标签读取 CSRF 令牌
+         *    CSRFProtect 要求所有 POST 请求携带此令牌（表单或请求头）
+         *    表单提交：作为隐藏字段 csrf_token
+         *    AJAX 提交：放在请求体（form-urlencoded）或 X-CSRFToken 头（JSON）
+         */
+        function getCsrfToken() {
+            var meta = document.querySelector('meta[name="csrf-token"]');
+            return meta ? meta.getAttribute('content') : '';
+        }
+
         /*
          * 1. 快速添加分类："+" 按钮切换行内表单的显示/隐藏
          *    点击 + 后 + 消失，只显示输入框和按钮
@@ -252,6 +436,7 @@
                 }
                 const formData = new URLSearchParams();
                 formData.append('name', name);
+                formData.append('csrf_token', getCsrfToken());  // CSRF 保护令牌
 
                 fetch('/admin/category/add', {
                     method: 'POST',
@@ -260,9 +445,9 @@
                 })
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
-                    if (data.success) {
+                    if (data.ok) {
                         // 后端返回成功，动态创建新 <li> 插入到分类列表末尾
-                        const cat = data.category;
+                        const cat = data.data.category;
                         const li = document.createElement('li');
                         li.className = 'cat-item';
                         li.innerHTML =
@@ -289,7 +474,7 @@
                         btnToggleAdd.style.display = 'inline-flex';
                         newCatName.value = '';
                     } else {
-                        alert(data.message || '添加失败，请重试。');
+                        alert(data.error || '添加失败，请重试。');
                     }
                 });
             });
@@ -336,6 +521,7 @@
                 }
 
                 const formData = new URLSearchParams();
+                formData.append('csrf_token', getCsrfToken());  // CSRF 保护令牌
                 fetch('/admin/category/delete/' + catId, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -399,6 +585,22 @@
             var debounceTimer = null;   // 防抖定时器
             var currentIndex  = -1;     // 键盘导航：当前高亮的索引，-1 表示无
             var searchResults = [];     // 当前搜索结果缓存
+
+            /* ---- localStorage 键名 ---- */
+            var STORAGE_KEY = 'blog_music_id';
+
+            /*
+             * 0. 页面初始化：从 localStorage 恢复播放器
+             *    优先使用本地存储的歌曲 ID（用户在当前浏览器最近选过的），
+             *    这样刷新页面后同一首歌会自动加载，不会丢歌
+             */
+            (function initPlayer() {
+                var localMusicId = localStorage.getItem(STORAGE_KEY);
+                if (localMusicId && playerWrap) {
+                    // 本地有记录 → 恢复播放器（即使服务端存的是不同的歌）
+                    refreshPlayer(localMusicId);
+                }
+            })();
 
             /*
              * 1. 防抖搜索：用户停止输入 300ms 后才发请求
@@ -498,7 +700,8 @@
                 .then(function(resp) { return resp.json(); })
                 .then(function(data) {
                     if (data.ok) {
-                        /* 成功：刷新播放器 iframe，清空搜索框 */
+                        /* 成功：保存到 localStorage + 刷新播放器 + 清空搜索框 */
+                        localStorage.setItem(STORAGE_KEY, song.id);
                         refreshPlayer(song.id);
                         searchInput.value = '';
                         searchInput.placeholder = '搜索网易云歌曲...';
@@ -516,18 +719,21 @@
              */
             function refreshPlayer(musicId) {
                 if (!playerWrap) return;
-                /* 构建新的 iframe URL */
-                var src = '//music.163.com/outchain/player?type=2&id='
-                        + musicId + '&auto=0&height=105';
-                /* 没有 music_id 时隐藏，有时显示并更新 src */
+                /* 有歌曲ID时加载 iframe 播放器，没有时显示占位提示（不隐藏） */
                 if (musicId) {
+                    var src = '//music.163.com/outchain/player?type=2&id='
+                            + musicId + '&auto=0&height=105';
                     playerWrap.innerHTML =
                         '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0"' +
                         ' width="100%" height="105" src="' + src + '"></iframe>';
                     playerWrap.style.display = 'block';
+                    /* 切换回播放器样式，去掉空状态样式 */
+                    playerWrap.classList.remove('music-player-empty');
                 } else {
-                    playerWrap.innerHTML = '';
-                    playerWrap.style.display = 'none';
+                    /* 空状态：显示占位提示文字，不隐藏播放器区域 */
+                    playerWrap.innerHTML = '搜索歌曲即可播放 🎵';
+                    playerWrap.style.display = 'flex';
+                    playerWrap.classList.add('music-player-empty');
                 }
             }
 
@@ -605,7 +811,467 @@
         })();
     </script>
 
+    <!--
+        ====== 评论交互脚本（事件委托） ======
+        使用事件委托模式监听 .content-area 上的 click 和 submit，
+        这样无论是首次加载还是 AJAX 替换内容，评论功能都能正常工作。
+    -->
+    <script>
+        (function() {
+            var contentArea = document.querySelector('.content-area');
+            if (!contentArea) return;
+
+            /*
+             * 辅助函数：根据 JSON 数据构建评论 HTML
+             * c 包含：id, author_name, created_at, content
+             */
+            function buildCommentHTML(c) {
+                var html = '<div class="comment-item" id="comment-' + c.id + '">';
+                html += '<div class="comment-header">';
+                html += '<strong>' + escapeHTML(c.author_name) + '</strong>';
+                html += '<span class="comment-time">' + c.created_at + '</span>';
+                html += '</div>';
+                html += '<div class="comment-body"><p>' + escapeHTML(c.content) + '</p></div>';
+                html += '<button type="button" class="btn-reply" data-comment-id="' + c.id + '" data-author-name="' + escapeHTML(c.author_name) + '">回复</button>';
+                html += '<div class="reply-form-inline" id="reply-form-' + c.id + '" style="display:none;">';
+                html += '<form method="POST" action="" class="reply-form">';
+                html += '<input type="hidden" name="csrf_token" value="' + getCsrfToken() + '">';
+                html += '<input type="hidden" name="parent_id" value="' + c.id + '">';
+                html += '<div class="form-group"><input type="text" name="author_name" required placeholder="你的昵称" class="form-input-sm"></div>';
+                html += '<div class="form-group"><textarea name="content" rows="2" required placeholder="回复 ' + escapeHTML(c.author_name) + '……" class="form-input-sm"></textarea></div>';
+                html += '<div class="reply-form-actions">';
+                html += '<button type="submit" class="btn btn-primary btn-sm">提交回复</button>';
+                html += '<button type="button" class="btn btn-sm btn-cancel-reply" data-comment-id="' + c.id + '">取消</button>';
+                html += '</div></form></div>';
+                html += '<div class="comment-replies" id="replies-' + c.id + '" style="display:none;"></div>';
+                html += '</div>';
+                return html;
+            }
+
+            /*
+             * 辅助函数：将新评论插入 DOM 的正确位置
+             */
+            function insertComment(html, parentId) {
+                var temp = document.createElement('div');
+                temp.innerHTML = html;
+                var newEl = temp.firstElementChild;
+
+                if (parentId) {
+                    // 楼中楼回复：插入父评论的子回复容器
+                    var repliesContainer = document.getElementById('replies-' + parentId);
+                    if (!repliesContainer) {
+                        var parentEl = document.getElementById('comment-' + parentId);
+                        if (parentEl) {
+                            repliesContainer = document.createElement('div');
+                            repliesContainer.className = 'comment-replies';
+                            repliesContainer.id = 'replies-' + parentId;
+                            parentEl.appendChild(repliesContainer);
+                        }
+                    }
+                    if (repliesContainer) {
+                        repliesContainer.style.display = 'block';
+                        repliesContainer.appendChild(newEl);
+                    }
+                } else {
+                    // 顶级评论：插入评论列表末尾
+                    var list = contentArea.querySelector('.comment-list');
+                    if (list) {
+                        list.appendChild(newEl);
+                    }
+                }
+            }
+
+            /*
+             * 辅助函数：更新评论计数
+             */
+            function updateCommentCount(delta) {
+                var h2 = contentArea.querySelector('.comments-area h2');
+                if (h2) {
+                    var match = h2.textContent.match(/\d+/);
+                    if (match) {
+                        var count = parseInt(match[0]) + delta;
+                        h2.textContent = '评论（' + count + '）';
+                    }
+                }
+            }
+
+            /*
+             * 辅助函数：HTML 转义防 XSS
+             */
+            function escapeHTML(str) {
+                var div = document.createElement('div');
+                div.appendChild(document.createTextNode(str));
+                return div.innerHTML;
+            }
+
+            /*
+             * 处理回复表单的 AJAX 提交（共用逻辑）
+             */
+            function handleReplySubmit(form, submitBtn) {
+                var parentId = form.querySelector('input[name="parent_id"]').value;
+                var originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = '提交中...';
+
+                var formData = new URLSearchParams(new FormData(form));
+                // 确保 CSRF token 也在请求参数中
+                if (!formData.has('csrf_token')) {
+                    formData.append('csrf_token', getCsrfToken());
+                }
+
+                fetch(form.action || window.location.pathname + '/comment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(function(resp) { return resp.json(); })
+                .then(function(data) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+
+                    if (data.ok) {
+                        var html = buildCommentHTML(data.data.comment);
+                        insertComment(html, parentId);
+                        // 隐藏回复表单，清空内容
+                        form.parentElement.style.display = 'none';
+                        form.querySelector('textarea[name="content"]').value = '';
+                        updateCommentCount(1);
+                    } else {
+                        alert(data.error || '评论提交失败，请重试。');
+                    }
+                })
+                .catch(function(err) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                    console.error('评论提交失败:', err);
+                    alert('网络错误，请重试。');
+                });
+            }
+
+            // ==========================================
+            // 事件委托：点击事件
+            // ==========================================
+            contentArea.addEventListener('click', function(e) {
+                // 1. 点击"回复"按钮 → 展开回复表单
+                var replyBtn = e.target.closest('.btn-reply');
+                if (replyBtn) {
+                    var commentId = replyBtn.getAttribute('data-comment-id');
+                    var formDiv = document.getElementById('reply-form-' + commentId);
+                    if (formDiv) {
+                        formDiv.style.display = 'block';
+                        var textarea = formDiv.querySelector('textarea[name="content"]');
+                        if (textarea) textarea.focus();
+                    }
+                    return;
+                }
+
+                // 2. 点击"取消"按钮 → 隐藏回复表单
+                var cancelBtn = e.target.closest('.btn-cancel-reply');
+                if (cancelBtn) {
+                    var cid = cancelBtn.getAttribute('data-comment-id');
+                    var formDiv2 = document.getElementById('reply-form-' + cid);
+                    if (formDiv2) {
+                        formDiv2.style.display = 'none';
+                        var ta = formDiv2.querySelector('textarea[name="content"]');
+                        if (ta) ta.value = '';
+                    }
+                    return;
+                }
+            });
+
+            // ==========================================
+            // 事件委托：表单提交
+            // ==========================================
+            contentArea.addEventListener('submit', function(e) {
+                // 1. 主评论表单提交
+                var mainForm = e.target.closest('.comment-form form');
+                if (mainForm && !mainForm.classList.contains('reply-form')) {
+                    e.preventDefault();
+                    var submitBtn = mainForm.querySelector('button[type="submit"]');
+                    var originalText = submitBtn.textContent;
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '提交中...';
+
+                    var formData = new URLSearchParams(new FormData(mainForm));
+                    // 确保 CSRF token 也在请求参数中
+                    if (!formData.has('csrf_token')) {
+                        formData.append('csrf_token', getCsrfToken());
+                    }
+
+                    fetch(mainForm.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    })
+                    .then(function(resp) { return resp.json(); })
+                    .then(function(data) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+
+                        if (data.ok) {
+                            var html = buildCommentHTML(data.data.comment);
+                            insertComment(html, null);
+                            mainForm.querySelector('textarea[name="content"]').value = '';
+                            updateCommentCount(1);
+                            // 隐藏"暂无评论"提示
+                            var emptyMsg = contentArea.querySelector('.no-comments');
+                            if (emptyMsg) emptyMsg.style.display = 'none';
+                        } else {
+                            alert(data.error || '评论提交失败，请重试。');
+                        }
+                    })
+                    .catch(function(err) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+                        console.error('评论提交失败:', err);
+                        alert('网络错误，请重试。');
+                    });
+                    return;
+                }
+
+                // 2. 回复表单提交
+                var replyForm = e.target.closest('.reply-form');
+                if (replyForm) {
+                    e.preventDefault();
+                    var btn = replyForm.querySelector('button[type="submit"]');
+                    handleReplySubmit(replyForm, btn);
+                    return;
+                }
+            });
+        })();
+    </script>
+
     <!-- 子模板可在 body 末尾插入 JavaScript -->
     {% block scripts %}{% endblock %}
+
+    <!--
+        ====== 全局 AJAX 导航脚本 ======
+        拦截站内链接点击，通过 AJAX 加载页面内容，只替换 .content-area，
+        避免整页刷新导致侧边栏音乐播放器中断。
+
+        设计要点：
+        - 检查 e.defaultPrevented 避免与分页等已有脚本冲突
+        - admin/profile/login/register 等复杂页面不做 AJAX（整页刷新）
+        - 浏览器前进/后退正确恢复内容
+    -->
+    <script>
+        (function() {
+            var contentArea = document.querySelector('.content-area');
+            if (!contentArea) return;
+
+            /* ---- 根据 URL 更新 Header 的类名和显示元素 ---- */
+            function updateHeader(url) {
+                var header = document.getElementById('page-header');
+                var siteInfo = document.getElementById('site-info');
+                var pageSiteInfo = document.getElementById('page-site-info');
+                var scrollDown = document.getElementById('scroll-down');
+
+                if (!header) return;
+
+                // 提取路径部分
+                var path = url.replace(window.location.origin, '').split('?')[0];
+
+                // 判断是否首页（/ 或空路径）
+                var isHome = (path === '/' || path === '');
+
+                if (isHome) {
+                    // 首页：全屏大图
+                    header.classList.remove('not-home-page');
+                    header.classList.add('full_page');
+                    if (siteInfo) siteInfo.style.display = '';
+                    if (scrollDown) scrollDown.style.display = '';
+                    if (pageSiteInfo) pageSiteInfo.style.display = 'none';
+                } else {
+                    // 非首页：小 Banner
+                    header.classList.remove('full_page');
+                    header.classList.add('not-home-page');
+                    if (siteInfo) siteInfo.style.display = 'none';
+                    if (scrollDown) scrollDown.style.display = 'none';
+                    if (pageSiteInfo) pageSiteInfo.style.display = '';
+                    // 更新 Banner 标题：从内容区取页面标签或文章标题
+                    var h1 = contentArea.querySelector('.page-header-label, .post-detail .post-title');
+                    if (h1 && pageSiteInfo) {
+                        var titleEl = pageSiteInfo.querySelector('#site-title');
+                        if (titleEl) titleEl.textContent = h1.textContent.trim();
+                    }
+                }
+            }
+
+            /* ---- 判断链接是否应被 AJAX 拦截 ---- */
+            function shouldIntercept(link) {
+                var href = link.getAttribute('href');
+                if (!href) return false;
+
+                // 排除外部链接：以 http/https 开头但不是本站的
+                if (href.startsWith('http://') || href.startsWith('https://')) {
+                    if (!href.startsWith(window.location.origin)) return false;
+                }
+
+                // 排除特殊协议
+                if (href.startsWith('javascript:') || href.startsWith('mailto:')) return false;
+                // 排除页内锚点
+                if (href === '#' || href.startsWith('#')) return false;
+
+                // 排除新标签页打开的链接
+                if (link.getAttribute('target') === '_blank') return false;
+
+                // 提取路径部分（去掉 origin），统一处理
+                var path = href.replace(window.location.origin, '');
+                // 去掉查询参数，只比较路径
+                var pathOnly = path.split('?')[0];
+
+                // 排除 admin / profile / login / register / logout ——
+                // 这些页面有复杂 JS（如 Quill 编辑器），整页刷新更可靠
+                var fullPagePaths = ['/admin', '/profile', '/login', '/register', '/logout'];
+                for (var i = 0; i < fullPagePaths.length; i++) {
+                    if (pathOnly === fullPagePaths[i] ||
+                        pathOnly.startsWith(fullPagePaths[i] + '/')) {
+                        return false;
+                    }
+                }
+
+                // 排除编辑文章页（有 Quill 编辑器，需整页刷新）
+                if (/^\/post\/\d+\/edit/.test(pathOnly)) return false;
+
+                return true;
+            }
+
+            /* ---- AJAX 加载目标页面并替换内容区 ---- */
+            function navigateTo(url, addToHistory) {
+                if (addToHistory === undefined) addToHistory = true;
+
+                // 拼接 partial=1，告诉后端只返回内容区 HTML 片段
+                var separator = url.indexOf('?') === -1 ? '?' : '&';
+                var fetchUrl = url + separator + 'partial=1';
+
+                // 加载中：降低内容区透明度，暗示正在加载
+                contentArea.style.opacity = '0.4';
+                contentArea.style.transition = 'opacity 0.15s';
+
+                fetch(fetchUrl, { headers: { 'Accept': 'text/html' } })
+                .then(function(resp) {
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    return resp.text();
+                })
+                .then(function(html) {
+                    // 替换内容区
+                    contentArea.innerHTML = html;
+                    contentArea.style.opacity = '1';
+
+                    // 内容高度变化后，恢复可滚动
+                    document.body.style.overflow = '';
+
+                    // 更新浏览器 URL
+                    if (addToHistory) {
+                        history.pushState({ url: url }, '', url);
+                    }
+
+                    // 滚动到内容区顶部（平滑滚动）
+                    contentArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                    // 更新页面标题：从新内容中提取标签文字或文章标题
+                    var h1 = contentArea.querySelector('.page-header-label, .post-detail .post-title');
+                    if (h1) {
+                        var newTitle = h1.textContent.trim();
+                        if (newTitle.length > 50) {
+                            newTitle = newTitle.substring(0, 47) + '...';
+                        }
+                        document.title = newTitle + ' - 拾光小筑';
+                    }
+
+                    // 同步 Header 状态：首页全屏 vs 非首页小 Banner
+                    updateHeader(url);
+                })
+                .catch(function(err) {
+                    console.error('AJAX 导航失败，回退到整页刷新:', err);
+                    // 出错时回退到传统的整页跳转
+                    window.location.href = url;
+                });
+            }
+
+            /* ---- 1. 拦截站内链接点击 ---- */
+            document.addEventListener('click', function(e) {
+                // 如果已有其他处理器（如分页）preventDefault 了，不重复处理
+                if (e.defaultPrevented) return;
+
+                var link = e.target.closest('a');
+                if (!link) return;
+                if (!shouldIntercept(link)) return;
+
+                e.preventDefault();
+                navigateTo(link.getAttribute('href'), true);
+            });
+
+            /* ---- 2. 浏览器前进/后退 ---- */
+            window.addEventListener('popstate', function(e) {
+                if (e.state && e.state.url) {
+                    navigateTo(e.state.url, false);
+                } else {
+                    // 没有状态记录（回到最初的页面），整页刷新
+                    window.location.reload();
+                }
+            });
+
+            /* ---- 3. 初始页面加载时，写入当前 URL 到 history 状态 ---- */
+            // 这样用户回到首页时能通过 popstate 恢复，而不是直接 reload
+            history.replaceState({ url: window.location.href }, '', window.location.href);
+        })();
+    </script>
+
+    <!-- ====== 不蒜子访客统计脚本 ====== -->
+    <!--
+        不蒜子（busuanzi）是免费轻量的网站访问量统计服务，
+        通过异步加载脚本自动查找页面中 id="busuanzi_value_site_uv"
+        和 id="busuanzi_value_site_pv" 的元素并填入统计数字
+    -->
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <!-- ====== 最后更新时间相对时间计算 ====== -->
+    <!--
+        把"2026-04-03"这种绝对日期转成"2 个月前"这种相对时间，
+        和人看时间的直觉一致；页面加载时执行一次即可
+    -->
+    <script>
+        (function() {
+            var el = document.getElementById('last-push-date');
+            if (!el) return;
+            var isoStr = el.getAttribute('data-lastpushdate');
+            if (!isoStr) return;
+
+            /*
+             * 计算时间差并返回中文相对时间描述
+             * 例如：刚刚、X 分钟前、X 小时前、X 天前、X 个月前、X 年前
+             */
+            function relativeTime(pastDate) {
+                var now = new Date();
+                var diffMs = now - pastDate;           // 毫秒差
+                var diffSec = Math.floor(diffMs / 1000);      // 秒
+                var diffMin = Math.floor(diffSec / 60);       // 分钟
+                var diffHour = Math.floor(diffMin / 60);      // 小时
+                var diffDay = Math.floor(diffHour / 24);      // 天
+                var diffMonth = Math.floor(diffDay / 30);     // 月（近似）
+                var diffYear = Math.floor(diffDay / 365);     // 年（近似）
+
+                if (diffSec < 60)  return '刚刚';
+                if (diffMin < 60)  return diffMin + ' 分钟前';
+                if (diffHour < 24) return diffHour + ' 小时前';
+                if (diffDay < 30)  return diffDay + ' 天前';
+                if (diffMonth < 12) return diffMonth + ' 个月前';
+                return diffYear + ' 年前';
+            }
+
+            // 解析 ISO 时间字符串并显示相对时间
+            var past = new Date(isoStr);
+            if (!isNaN(past.getTime())) {
+                el.textContent = relativeTime(past);
+            }
+        })();
+    </script>
 </body>
 </html>

@@ -6,7 +6,11 @@
     需要登录才能访问（路由中加 @login_required）
 -->
 
+{# 个人中心侧边栏不显示文章分类列表 #}
+{% block sidebar_categories %}{% endblock %}
+
 {% block title %}个人中心 - {{ site_name }}{% endblock %}
+{% block page_title %}个人中心{% endblock %}
 
 {% block content %}
     <div class="profile-container">
@@ -15,52 +19,70 @@
         <!-- ========== 头像区域 ========== -->
         <div class="profile-avatar-section">
             <!--
-                显示当前头像。
-                url_for('static', filename='uploads/' + user.avatar)：拼接出头像文件的路径。
+                显示当前头像，点击弹出操作弹窗（更换 / 下载）。
+                url_for('static', filename='uploads/' + current_user.avatar)：拼接出头像文件的路径。
                 头像存在 static/uploads/ 下，默认是 default.png
             -->
             <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}"
                  alt="头像"
-                 class="profile-avatar">
+                 class="profile-avatar"
+                 title="点击头像进行操作">
 
-            <!--
-                上传新头像的表单。
-                enctype="multipart/form-data" 必须加！这是文件上传的关键，
-                不加的话浏览器只发文件名，不发文件内容。
-            -->
-            <form method="POST" action="" enctype="multipart/form-data" class="avatar-upload-form">
-                <div class="form-group">
-                    <label for="avatar">更换头像</label>
-                    <!--
-                        type="file"：弹出文件选择器
-                        accept="image/*"：只显示图片文件，过滤掉其他类型
-                    -->
-                    <input type="file" id="avatar" name="avatar"
-                           accept="image/jpeg,image/png,image/gif">
+            <!-- 退出登录：放在头像下方，柔和低调的设计 -->
+            <a href="{{ url_for('logout') }}" class="logout-link">退出登录</a>
+        </div>
+
+        <!--
+            隐藏的头像上传表单：用户点击"更换头像"后，JS 触发文件选择器，
+            选好文件后自动提交此表单。和后端路由的交互方式完全不变。
+        -->
+        <form id="avatar-upload-form" method="POST" action=""
+              enctype="multipart/form-data" style="display:none;">
+            <!-- CSRF 保护令牌 -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="file" id="avatar-file-input" name="avatar"
+                   accept="image/jpeg,image/png,image/gif">
+            <button type="submit" name="action" value="update_avatar"></button>
+        </form>
+
+        <!-- ========== 头像操作弹窗 ========== -->
+        <!--
+            复用 base.html 中已有的 .modal-overlay 和 .modal-box 样式。
+            点击遮罩层或"取消"按钮关闭弹窗。
+        -->
+        <div id="avatar-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-box">
+                <h3>头像操作</h3>
+                <div class="avatar-modal-actions">
+                    <button type="button" id="btn-change-avatar"
+                            class="btn btn-primary">
+                        更换头像
+                    </button>
+                    <button type="button" id="btn-download-avatar"
+                            class="btn btn-secondary">
+                        下载头像
+                    </button>
                 </div>
-                <button type="submit" name="action" value="update_avatar" class="btn btn-primary">
-                    上传头像
-                </button>
-            </form>
+                <div class="modal-actions">
+                    <button type="button" id="btn-cancel-avatar"
+                            class="btn btn-sm">取消</button>
+                </div>
+            </div>
         </div>
 
         <!-- ========== 个人资料编辑表单 ========== -->
         <section class="profile-form-section">
             <h2>编辑资料</h2>
             <!--
-                和头像上传共用同一个 URL /profile，
-                通过提交按钮的 name="action" 值来区分操作类型：
-                - name="action" value="update_profile" → 更新资料
-                - name="action" value="update_avatar"  → 更新头像
+                提交到 /profile，通过按钮的 name="action" value="update_profile"
+                告诉后端这是资料更新操作。
             -->
             <form method="POST" action="" class="profile-form">
+                <!-- CSRF 保护令牌 -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <!-- 用户名：只读，不允许修改 -->
                 <div class="form-group">
                     <label for="username">用户名（不可修改）</label>
-                    <!--
-                        readonly：字段不可编辑但会随表单提交。
-                        disabled 的字段不会提交，所以用 readonly
-                    -->
                     <input type="text" id="username"
                            value="{{ current_user.username }}" readonly>
                 </div>
@@ -68,10 +90,6 @@
                 <!-- 昵称 -->
                 <div class="form-group">
                     <label for="nickname">昵称</label>
-                    <!--
-                        用 value 把当前值预填进输入框。
-                        用户打开页面就能看到已设置的内容，直接修改即可
-                    -->
                     <input type="text" id="nickname" name="nickname"
                            maxlength="50"
                            value="{{ current_user.nickname or '' }}"
@@ -81,49 +99,230 @@
                 <!-- 个人简介 -->
                 <div class="form-group">
                     <label for="bio">个人简介</label>
-                    <!--
-                        textarea 的预填值放在标签之间，不像 input 用 value 属性。
-                        maxlength="200" 匹配数据库 VARCHAR(200)
-                    -->
                     <textarea id="bio" name="bio" rows="3"
                               maxlength="200"
                               placeholder="简单介绍一下自己">{{ current_user.bio or '' }}</textarea>
                 </div>
 
-                <!-- 网易云音乐歌曲 ID -->
-                <div class="form-group">
-                    <label for="music_id">🎵 侧边栏音乐（网易云歌曲 ID）</label>
-                    <!--
-                        用户填入网易云音乐的歌曲 ID，侧边栏自动生成外链播放器。
-                        获取方式：打开网易云网页版 → 歌曲详情页 → URL 中的 id 参数
-                        例如 https://music.163.com/#/song?id=123456 → 填 123456
-                        留空则不显示播放器
-                    -->
-                    <input type="text" id="music_id" name="music_id"
-                           maxlength="30"
-                           value="{{ current_user.music_id or '' }}"
-                           placeholder="例如 123456，留空则不显示播放器">
-                    <small class="form-hint">
-                        💡 提示：在任意页面的<b>侧边栏</b>中可以直接搜索歌名切换歌曲，无需手动找 ID 哦～
-                        <br>这里保留作为高级设置，方便你精确指定歌曲。
-                    </small>
+                <!-- ====== 音乐设置独立卡片，柔和背景 ====== -->
+                <!--
+                    把音乐 ID 放在独立卡片中，视觉上形成子区域，比纯白底色更柔和。
+                    输入即自动保存，无需点击按钮。
+                -->
+                <div class="music-settings-card">
+                    <div class="form-group">
+                        <label for="music_id">🎵 侧边栏音乐（网易云歌曲 ID）</label>
+                        <!--
+                            用户填入网易云音乐的歌曲 ID，侧边栏自动生成外链播放器。
+                            获取方式：打开网易云网页版 → 歌曲详情页 → URL 中的 id 参数
+                            例如 https://music.163.com/#/song?id=123456 → 填 123456
+                            留空则不显示播放器。
+                            输入内容后自动保存，无需手动点击按钮。
+                        -->
+                        <input type="text" id="music_id" name="music_id"
+                               maxlength="30"
+                               value="{{ current_user.music_id or '' }}"
+                               placeholder="例如 123456，留空则不显示播放器">
+                        <small class="form-hint">
+                            💡 提示：在任意页面的<b>侧边栏</b>中可以直接搜索歌名切换歌曲，无需手动找 ID 哦～
+                            <br>这里保留作为高级设置，方便你精确指定歌曲。
+                            <br>⏳ 输入后自动保存，无需手动点击。
+                        </small>
+                    </div>
                 </div>
-
-                <!-- 提交按钮：name="action" 的值帮后端区分是哪个操作 -->
-                <button type="submit" name="action" value="update_profile" class="btn btn-primary">
-                    保存修改
-                </button>
             </form>
         </section>
 
-        <!-- ========== 账号信息 ========== -->
-        <section class="profile-info-section">
-            <h2>账号信息</h2>
-            <ul class="profile-info-list">
-                <li>用户名：{{ current_user.username }}</li>
-                <!-- strftime 格式化注册时间为可读格式 -->
-                <li>注册时间：{{ current_user.created_at.strftime('%Y-%m-%d %H:%M') }}</li>
-            </ul>
+        <!-- ========== 修改密码表单 ========== -->
+        <section class="profile-form-section">
+            <h2>修改密码</h2>
+            <!--
+                提交到 /change-password 路由，通过旧密码验证后才能修改。
+                独立的 POST 表单，不影响个人资料编辑表单。
+            -->
+            <form method="POST" action="{{ url_for('change_password') }}" class="profile-form">
+                <!-- CSRF 保护令牌 -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <!-- 旧密码：必须输入，用于身份确认 -->
+                <div class="form-group">
+                    <label for="old_password">当前密码</label>
+                    <input type="password" id="old_password" name="old_password" required
+                           placeholder="请输入当前密码">
+                </div>
+
+                <!-- 新密码 -->
+                <div class="form-group">
+                    <label for="new_password">新密码</label>
+                    <input type="password" id="new_password" name="new_password" required
+                           minlength="6"
+                           placeholder="请输入新密码（至少 6 位）">
+                </div>
+
+                <!-- 确认新密码 -->
+                <div class="form-group">
+                    <label for="confirm_password">确认新密码</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required
+                           minlength="6"
+                           placeholder="请再次输入新密码">
+                </div>
+
+                <button type="submit" class="btn btn-primary">修改密码</button>
+            </form>
         </section>
     </div>
+{% endblock %}
+
+{% block scripts %}
+<!--
+    头像操作弹窗交互脚本
+    功能：
+      1. 点击头像 → 显示操作弹窗
+      2. "更换头像" → 触发隐藏的文件选择框
+      3. 文件选好后 → 自动提交上传表单
+      4. "下载头像" → 下载当前头像到本地
+      5. "取消" / 点击遮罩层 → 关闭弹窗
+-->
+<script>
+(function() {
+    /* ---- 获取关键 DOM 元素 ---- */
+    var avatarImg = document.querySelector('.profile-avatar');
+    var avatarModal = document.getElementById('avatar-modal');
+    var btnChange = document.getElementById('btn-change-avatar');
+    var btnDownload = document.getElementById('btn-download-avatar');
+    var btnCancel = document.getElementById('btn-cancel-avatar');
+    var fileInput = document.getElementById('avatar-file-input');
+    var uploadForm = document.getElementById('avatar-upload-form');
+
+    /* 防御性检查：关键元素缺失时静默退出 */
+    if (!avatarImg || !avatarModal) return;
+
+    /*
+     * 点击头像 → 显示操作弹窗
+     * .modal-overlay 自身是 display:flex 居中的，所以设为 flex
+     */
+    avatarImg.addEventListener('click', function() {
+        avatarModal.style.display = 'flex';
+    });
+
+    /*
+     * "更换头像" → 触发隐藏的 <input type="file"> 点击
+     * 弹出自带的系统文件选择对话框
+     */
+    if (btnChange && fileInput) {
+        btnChange.addEventListener('click', function() {
+            fileInput.click();
+        });
+    }
+
+    /*
+     * 文件选择完成后 → 自动提交上传表单
+     * change 事件在用户选好文件时触发；
+     * 用户在文件选择器中点"取消"则不会触发
+     */
+    if (fileInput && uploadForm) {
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files.length > 0) {
+                uploadForm.submit();
+            }
+        });
+    }
+
+    /*
+     * "下载头像" → 创建临时 <a> 标签触发浏览器下载
+     * 头像在同域下，download 属性可正常生效
+     */
+    if (btnDownload) {
+        btnDownload.addEventListener('click', function() {
+            var a = document.createElement('a');
+            a.href = avatarImg.src;
+            a.download = '';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    }
+
+    /*
+     * 关闭弹窗：点击"取消"按钮
+     */
+    if (btnCancel) {
+        btnCancel.addEventListener('click', function() {
+            avatarModal.style.display = 'none';
+        });
+    }
+
+    /*
+     * 关闭弹窗：点击半透明遮罩层（弹窗外部区域）
+     * e.target === avatarModal 区分"点遮罩"和"点弹窗内部"
+     */
+    avatarModal.addEventListener('click', function(e) {
+        if (e.target === avatarModal) {
+            avatarModal.style.display = 'none';
+        }
+    });
+
+    /* ====== 自动保存：输入即存，无需按钮 ====== */
+
+    /*
+     * 防抖函数：延迟 delay 毫秒执行，期间有新调用则重置计时
+     * 避免用户每敲一个字就发一次请求
+     */
+    function debounce(fn, delay) {
+        var timer = null;
+        return function() {
+            var ctx = this, args = arguments;
+            clearTimeout(timer);
+            timer = setTimeout(function() { fn.apply(ctx, args); }, delay);
+        };
+    }
+
+    /*
+     * 发送保存请求到后端 API
+     * field: 字段名（nickname / bio / music_id）
+     * value: 字段值
+     */
+    function autoSave(field, value) {
+        fetch('/api/profile/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ field: field, value: value })
+        }).then(function(resp) { return resp.json(); })
+          .then(function(data) {
+              if (data.ok) {
+                  console.log('[自动保存] ' + data.field + ' 已保存');
+              } else {
+                  console.warn('[自动保存] 失败: ' + data.error);
+              }
+          }).catch(function(err) {
+              console.warn('[自动保存] 网络错误:', err);
+          });
+    }
+
+    /*
+     * 绑定自动保存到各输入字段
+     * - music_id：输入时自动保存（500ms 防抖）
+     * - nickname、bio：失去焦点时保存
+     */
+    var musicInput = document.getElementById('music_id');
+    var nicknameInput = document.getElementById('nickname');
+    var bioInput = document.getElementById('bio');
+
+    if (musicInput) {
+        musicInput.addEventListener('input', debounce(function() {
+            autoSave('music_id', this.value);
+        }, 500));
+    }
+    if (nicknameInput) {
+        nicknameInput.addEventListener('blur', function() {
+            autoSave('nickname', this.value);
+        });
+    }
+    if (bioInput) {
+        bioInput.addEventListener('blur', function() {
+            autoSave('bio', this.value);
+        });
+    }
+})();
+</script>
 {% endblock %}

@@ -38,6 +38,8 @@ class User(db.Model, UserMixin):
     # 网易云音乐外链播放器：存歌曲 ID（数字），为空表示不显示播放器
     # 例如歌曲 https://music.163.com/#/song?id=123456 → 存 "123456"
     music_id = db.Column(db.String(30), default='')
+    # 邮箱：用于密码重置（选填）
+    email = db.Column(db.String(100), default='')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # ---- 关联关系 ----
@@ -94,6 +96,14 @@ class Article(db.Model):
     # onupdate=datetime.utcnow：每次修改文章时自动更新为当前时间
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    # 封面图路径，存储相对于 static/ 的路径（如 'covers/abc.jpg'），默认为空表示无封面
+    cover_image = db.Column(db.String(255), default='')
+    # 阅读量：文章详情页每次被非作者访问时 +1
+    views = db.Column(db.Integer, default=0)
+    # 文章状态：'published'（已发布，公开可见）或 'draft'（草稿，仅作者可见）
+    status = db.Column(db.String(20), default='published')
+    # 置顶标记：True 的文章在所有列表中排在最前面
+    is_pinned = db.Column(db.Boolean, default=False)
 
     # ---- 外键 ----
     # db.ForeignKey('表名.列名')：建立外键约束，确保 author_id 的值在 users 表中真实存在
@@ -111,7 +121,40 @@ class Article(db.Model):
 
 
 # =============================================
-# 四、评论表
+# 四、文章-标签关联表（多对多中间表）
+# =============================================
+
+# db.Table 创建关联表：不需要单独的模型类，只需要列定义
+# SQLAlchemy 会自动通过 secondary 参数使用这张表
+article_tags = db.Table('article_tags',
+    db.Column('article_id', db.Integer, db.ForeignKey('articles.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tags.id'), primary_key=True)
+)
+
+
+# =============================================
+# 五、标签表
+# =============================================
+
+class Tag(db.Model):
+    """
+    标签表：文章标签（如"Python"、"Flask"、"前端"）
+    与文章是多对多关系：一篇文章可以有多个标签，一个标签下可以有多篇文章
+    """
+    __tablename__ = 'tags'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(30), unique=True, nullable=False)
+    # articles 属性：通过 article_tags 关联表反向查找此标签下的所有文章
+    # secondary=article_tags：指定中间关联表
+    articles = db.relationship('Article', secondary=article_tags, backref='tags')
+
+    def __repr__(self):
+        return f'<Tag {self.name}>'
+
+
+# =============================================
+# 六、评论表
 # =============================================
 class Comment(db.Model):
     """
